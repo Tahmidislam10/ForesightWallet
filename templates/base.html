@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Foresight Wallet</title>
+
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="d-flex">
+
+    <!-- Sidebar -->
+    <div class="bg-dark text-white p-3 vh-100" style="width: 250px;">
+        <h4 class="text-center mb-4">Foresight Wallet</h4>
+
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="/dashboard" class="nav-link text-white">Dashboard</a>
+            </li>
+            <li>
+                <a href="/spending-log" class="nav-link text-white">Spending Log</a>
+            </li>
+            <li>
+                <a href="/insights" class="nav-link text-white">Insights</a>
+            </li>
+            <li>
+                <a href="/budget-tracker" class="nav-link text-white">Budget Tracker</a>
+            </li>
+            <li>
+                <a href="/feedback" class="nav-link text-white">Feedback</a>
+            </li>
+        </ul>
+
+        <hr>
+
+        <a href="/" class="btn btn-outline-light w-100">Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid p-4">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Charts JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='charts.js') }}"></script>
+
+</body>
+</html>

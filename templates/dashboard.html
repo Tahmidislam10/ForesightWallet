@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-4">Dashboard</h2>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6>Total Income</h6>
+                <h4>£2,000</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6>Total Expenses</h6>
+                <h4>£1,450</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6>Savings</h6>
+                <h4>£550</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-danger">
+            <div class="card-body">
+                <h6>Prediction</h6>
+                <h4 class="text-danger">Likely to Exceed Budget</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm p-3">
+            <h6>Spending Trend</h6>
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm p-3">
+            <h6>Category Breakdown</h6>
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
