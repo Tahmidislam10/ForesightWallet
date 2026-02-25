@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-4">Spending Log</h2>
+
+<div class="row">
+
+    <!-- LEFT SIDE -->
+    <div class="col-lg-8">
+
+        <!-- ADD ENTRY CARD -->
+        <div class="card shadow-sm p-4 mb-4">
+
+            <form method="POST">
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="date" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select" required>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Type</label>
+                        <select name="type" class="form-select" required>
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Amount (£)</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" required>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-dark w-100">
+                    Add Entry
+                </button>
+
+            </form>
+        </div>
+
+
+        <!-- FILTER TOGGLE -->
+        <div class="mb-3 d-flex gap-2">
+            <button class="btn btn-outline-dark btn-sm">7 Days</button>
+            <button class="btn btn-outline-dark btn-sm">30 Days</button>
+            <button class="btn btn-outline-dark btn-sm">3 Months</button>
+            <button class="btn btn-dark btn-sm">All Time</button>
+        </div>
+
+
+        <!-- TRANSACTION TABLE -->
+        <div class="card shadow-sm p-3">
+
+            <h6 class="mb-3">Transaction History</h6>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Amount (£)</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for t in transactions %}
+                        <tr>
+                            <td>{{ t.date.strftime("%d %b %Y") }}</td>
+                            <td>{{ t.category }}</td>
+                            <td>{{ t.description }}</td>
+                            <td>
+                                {% if t.type == "expense" %}
+                                    <span class="badge bg-danger">Expense</span>
+                                {% else %}
+                                    <span class="badge bg-success">Income</span>
+                                {% endif %}
+                            </td>
+                            <td>£{{ t.amount }}</td>
+                            <td class="text-end">
+
+                                <!-- Edit -->
+                                <button class="btn btn-sm btn-outline-secondary">
+                                    ✏️
+                                </button>
+
+                                <!-- Delete -->
+                                <button class="btn btn-sm btn-outline-danger">
+                                    🗑
+                                </button>
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if transactions|length == 0 %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No transactions yet.
+                            </td>
+                        </tr>
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RIGHT SIDE -->
+    <div class="col-lg-4">
+
+        <div class="card shadow-sm p-4">
+            <h6 class="mb-3">Category Breakdown</h6>
+            <canvas id="categoryChart"></canvas>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

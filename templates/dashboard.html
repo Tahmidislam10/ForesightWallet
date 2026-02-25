@@ -4,60 +4,52 @@
 
 <h2 class="mb-4">Dashboard</h2>
 
+{% if empty %}
+
+<div class="alert alert-warning text-center shadow-sm">
+    <h5 class="mb-2">No dashboard data available</h5>
+    <p class="mb-3">Please submit entries in the Spending Log to view analytics.</p>
+    <a href="/spending-log" class="btn btn-dark">
+        Go to Spending Log
+    </a>
+</div>
+
+{% else %}
+
 <!-- Summary Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
+<div class="row g-4">
+
+    <div class="col-md-4">
         <div class="card shadow-sm">
             <div class="card-body">
                 <h6>Total Income</h6>
-                <h4>£2,000</h4>
+                <h4>£{{ total_income }}</h4>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="card shadow-sm">
             <div class="card-body">
                 <h6>Total Expenses</h6>
-                <h4>£1,450</h4>
+                <h4>£{{ total_expense }}</h4>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card shadow-sm">
+    <div class="col-md-4">
+        <div class="card shadow-sm {% if savings < 0 %}border-danger{% endif %}">
             <div class="card-body">
-                <h6>Savings</h6>
-                <h4>£550</h4>
+                <h6>Net Savings</h6>
+                <h4 class="{% if savings < 0 %}text-danger{% else %}text-success{% endif %}">
+                    £{{ savings }}
+                </h4>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card shadow-sm border-danger">
-            <div class="card-body">
-                <h6>Prediction</h6>
-                <h4 class="text-danger">Likely to Exceed Budget</h4>
-            </div>
-        </div>
-    </div>
 </div>
 
-<!-- Charts -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="card shadow-sm p-3">
-            <h6>Spending Trend</h6>
-            <canvas id="trendChart"></canvas>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card shadow-sm p-3">
-            <h6>Category Breakdown</h6>
-            <canvas id="categoryChart"></canvas>
-        </div>
-    </div>
-</div>
+{% endif %}
 
 {% endblock %}
