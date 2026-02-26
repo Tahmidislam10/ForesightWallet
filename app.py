@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, redirect, session
 from pymongo import MongoClient
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+from bson.objectid import ObjectId
+from collections import defaultdict
+import json 
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -128,6 +131,22 @@ def dashboard():
 
 
 # ==========================
+# delete transaction
+# ==========================
+
+@app.route("/delete-transaction/<id>")
+def delete_transaction(id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    spending_collection.delete_one({
+        "_id": ObjectId(id),
+        "user_id": session["user_id"]
+    })
+
+    return redirect("/spending-log")
+
+# ==========================
 # SPENDING LOG
 # ==========================
 
@@ -169,6 +188,9 @@ def spending_log():
 
         spending_collection.insert_one(new_entry)
         return redirect("/spending-log")
+
+    
+    
 
     # -----------------------------
     # GET REQUEST

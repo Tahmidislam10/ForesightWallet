@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 
 <h2 class="mb-4">Spending Log</h2>
@@ -23,11 +22,23 @@
 
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Category</label>
-                        <select name="category" class="form-select" required>
+
+                        <select name="category"
+                                id="categorySelect"
+                                class="form-select"
+                                required>
                             {% for cat in categories %}
                                 <option value="{{ cat }}">{{ cat }}</option>
                             {% endfor %}
+                            <option value="Other">Other</option>
                         </select>
+
+                        <input type="text"
+                               id="customCategory"
+                               name="custom_category"
+                               class="form-control mt-2"
+                               placeholder="Enter new category"
+                               style="display:none;">
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -107,15 +118,10 @@
                             <td>£{{ t.amount }}</td>
                             <td class="text-end">
 
-                                <!-- Edit -->
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    ✏️
-                                </button>
-
-                                <!-- Delete -->
-                                <button class="btn btn-sm btn-outline-danger">
+                                <a href="/delete-transaction/{{ t._id }}"
+                                   class="btn btn-sm btn-outline-danger">
                                     🗑
-                                </button>
+                                </a>
 
                             </td>
                         </tr>
@@ -142,13 +148,86 @@
     <!-- RIGHT SIDE -->
     <div class="col-lg-4">
 
-        <div class="card shadow-sm p-4">
-            <h6 class="mb-3">Category Breakdown</h6>
-            <canvas id="categoryChart"></canvas>
+        <div class="card shadow-sm p-4 text-center">
+
+            {% if chart_values|length == 0 %}
+                <p class="text-muted m-0">No data available</p>
+            {% else %}
+                <canvas id="categoryChart"></canvas>
+            {% endif %}
+
         </div>
 
     </div>
 
 </div>
+
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    {% if chart_values|length != 0 %}
+
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                data: {{ chart_values|safe }},
+                backgroundColor: [
+                    '#4e73df',
+                    '#1cc88a',
+                    '#36b9cc',
+                    '#f6c23e',
+                    '#e74a3b',
+                    '#858796',
+                    '#6610f2',
+                    '#fd7e14'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%',
+            animation: {
+                animateRotate: true,
+                duration: 1400
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    {% endif %}
+
+    // Custom Category Toggle
+    const categorySelect = document.getElementById("categorySelect");
+    const customInput = document.getElementById("customCategory");
+
+    if (categorySelect) {
+        categorySelect.addEventListener("change", function() {
+            if (this.value === "Other") {
+                customInput.style.display = "block";
+                customInput.required = true;
+            } else {
+                customInput.style.display = "none";
+                customInput.required = false;
+            }
+        });
+    }
+
+});
+</script>
 
 {% endblock %}
