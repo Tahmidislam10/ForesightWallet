@@ -1,9 +1,10 @@
 ﻿{% extends "base.html" %}
 {% block content %}
 
-<h2 class="mb-4">Spending Log</h2>
+<div class="spending-log-page">
+    <h2 class="mb-4">Spending Log</h2>
 
-<div class="row">
+    <div class="row">
 
     <!-- LEFT SIDE -->
     <div class="col-lg-8">
@@ -70,46 +71,44 @@
         <div class="mb-3 d-flex gap-2 align-items-center">
 
             <a href="/spending-log?filter=7" data-filter="7"
-               class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '7' else 'btn-outline-dark' }}">
-        7 Days
-    </a>
+                class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '7' else 'btn-outline-dark' }}">
+                7 Days
+            </a>
 
             <a href="/spending-log?filter=30" data-filter="30"
-               class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '30' else 'btn-outline-dark' }}">
-        30 Days
-    </a>
+                class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '30' else 'btn-outline-dark' }}">
+                30 Days
+            </a>
 
             <a href="/spending-log?filter=90" data-filter="90"
-               class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '90' else 'btn-outline-dark' }}">
-        3 Months
-    </a>
+                class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '90' else 'btn-outline-dark' }}">
+                3 Months
+            </a>
 
-    <!-- 🔵 MONTH DROPDOWN -->
-    <form method="GET" action="/spending-log">
-        <select name="month" id="monthSelect"
-                class="form-select form-select-sm"
-                style="width:auto; display:inline-block;">
+            <!-- 🔵 MONTH DROPDOWN -->
+            <form method="GET" action="/spending-log">
+                <select name="month" id="monthSelect" class="form-select form-select-sm"
+                    style="width:auto; display:inline-block;">
 
-            <option value="">Select Month</option>
+                    <option value="">Select Month</option>
 
-            {% for i in range(1,13) %}
-                <option value="{{ i }}"
-                    {% if active_month and active_month|int == i %} selected {% endif %}>
-                    {{ [
+                    {% for i in range(1,13) %}
+                    <option value="{{ i }}" {% if active_month and active_month|int==i %} selected {% endif %}>
+                        {{ [
                         'January','February','March','April','May','June',
                         'July','August','September','October','November','December'
-                    ][i-1] }}
-                </option>
-            {% endfor %}
-        </select>
-    </form>
+                        ][i-1] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
 
             <a href="/spending-log?filter=all" data-filter="all"
-               class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == 'all' else 'btn-outline-dark' }}">
-        All Time
-    </a>
+                class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == 'all' else 'btn-outline-dark' }}">
+                All Time
+            </a>
 
-</div>
+        </div>
 
 
         <!-- TRANSACTION TABLE -->
@@ -117,8 +116,8 @@
 
             <h6 class="mb-3">Transaction History</h6>
 
-            <div class="table-responsive transaction-table-scroll">
-                <table class="table align-middle">
+            <div class="spending-table-wrap">
+                <table class="table align-middle spending-table">
 
                     <thead>
                         <tr>
@@ -202,21 +201,22 @@
 
         <div class="card shadow-sm p-4 text-center">
 
-            <p id="noChartDataMsg" class="text-muted m-0" {% if chart_values|length != 0 %}style="display:none;"{% endif %}>No data available</p>
-            <canvas id="categoryChart"
-                data-labels='{{ chart_labels | tojson }}'
-                data-values='{{ chart_values | tojson }}'
-                {% if chart_values|length == 0 %}style="display:none;"{% endif %}></canvas>
+            <p id="noChartDataMsg" class="text-muted m-0" {% if chart_values|length !=0 %}style="display:none;" {% endif
+                %}>No data available</p>
+            <div id="categoryChart" data-labels='{{ chart_labels | tojson }}' data-values='{{ chart_values | tojson }}'
+                {% if chart_values|length==0 %}style="display:none;" {% endif %}>
+            </div>
 
         </div>
 
     </div>
 
+    </div>
 </div>
 
 
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const chartCanvas = document.getElementById("categoryChart");
@@ -271,8 +271,8 @@
                     <td class="description-cell">${escapeHtml(t.description)}</td>
                     <td class="type-cell">
                         ${t.type === "expense"
-                            ? '<span class="badge bg-danger">Expense</span>'
-                            : '<span class="badge bg-success">Income</span>'}
+                    ? '<span class="badge bg-danger">Expense</span>'
+                    : '<span class="badge bg-success">Income</span>'}
                     </td>
                     <td class="amount-cell">£${escapeHtml(t.amount)}</td>
                     <td class="text-end">
@@ -288,6 +288,7 @@
             if (!chartCanvas) return;
 
             const hasData = Array.isArray(values) && values.length > 0;
+
             chartCanvas.style.display = hasData ? "block" : "none";
             if (noChartDataMsg) {
                 noChartDataMsg.style.display = hasData ? "none" : "block";
@@ -301,56 +302,69 @@
                 return;
             }
 
-            if (!categoryChart) {
-                categoryChart = new Chart(chartCanvas.getContext("2d"), {
-                    type: "doughnut",
-                    data: {
-                        labels,
-                        datasets: [{
-                            data: values,
-                            backgroundColor: [
-                                "#4e73df",
-                                "#1cc88a",
-                                "#36b9cc",
-                                "#f6c23e",
-                                "#e74a3b",
-                                "#858796",
-                                "#6610f2",
-                                "#fd7e14"
-                            ],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        cutout: "70%",
-                        animation: {
-                            animateRotate: true,
-                            animateScale: true,
-                            duration: 900,
-                            easing: "easeOutQuart"
-                        },
-                        transitions: {
-                            active: {
-                                animation: {
-                                    duration: 500
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+
+            const options = {
+                series: values,
+                chart: {
+                    type: 'donut',
+                    height: 350,
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800
+                    }
+                },
+                labels: labels,
+                colors: [
+                    '#4e73df',
+                    '#1cc88a',
+                    '#36b9cc',
+                    '#f6c23e',
+                    '#e74a3b',
+                    '#858796',
+                    '#6610f2',
+                    '#fd7e14',
+                    '#20c997',
+                    '#6f42c1'
+                ],
+                legend: {
+                    position: 'bottom'
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    formatter: function (w) {
+                                        return '£' + w.globals.seriesTotals.reduce((a, b) => a + b, 0).toFixed(2)
+                                    }
                                 }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                position: "bottom"
                             }
                         }
                     }
-                });
-            } else {
-                categoryChart.data.labels = labels;
-                categoryChart.data.datasets[0].data = values;
-                categoryChart.update();
-            }
-        }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function (val) {
+                            return "£" + val.toFixed(2);
+                        }
+                    }
+                }
+            };
 
+            categoryChart = new ApexCharts(document.querySelector("#categoryChart"), options);
+            categoryChart.render();
+        }
         async function loadSpendingData() {
             const params = new URLSearchParams();
             if (currentState.filter) params.set("filter", currentState.filter);

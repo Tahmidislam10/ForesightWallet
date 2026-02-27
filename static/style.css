@@ -1,16 +1,105 @@
+:root {
+    --primary-blue: #1e3a8a;      /* royal blue */
+    --primary-blue-light: #e0e7ff;
+    --sidebar-bg: #ffffff;
+    --background-light: #f2f3f5;
+    --surface-grey: #f5f6f8;
+    --surface-grey-soft: #f8f9fb;
+    --surface-border: #e2e5ea;
+}
+
+
 /* ===== GLOBAL ===== */
 body {
-    background-color: #f5f5f5;
+    background-color: var(--background-light);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* ===== NAVBAR ===== */
-.bg-black {
-    background-color: #111 !important;
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid #e5e7eb;
+    min-height: 100vh;
+    padding: 20px;
+    transition: all 0.3s ease;
 }
 
-.navbar {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-weight: 700;
+    color: var(--primary-blue);
+}
+
+.sidebar-section {
+    margin-top: 30px;
+}
+
+.sidebar-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #000000;
+    margin-bottom: 12px;
+}
+
+/* Divider lines between sidebar sections */
+.sidebar-section + .sidebar-section {
+    border-top: 1px solid #000000;
+    padding-top: 22px;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--primary-blue);
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.sidebar a:hover {
+    background: var(--primary-blue-light);
+}
+
+.sidebar a.active {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.sidebar i {
+    font-size: 18px;
+    color: var(--primary-blue);
+}
+
+/* Collapsed sidebar */
+.sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar.collapsed .sidebar-title,
+.sidebar.collapsed span,
+.sidebar.collapsed .logo {
+    display: none;
+}
+
+.main-content {
+    margin-left: 260px;
+    padding: 30px;
+    background: var(--background-light);
+    min-height: 100vh;
+    transition: 0.3s;
+}
+
+.sidebar.collapsed ~ .main-content {
+    margin-left: 80px;
 }
 
 /* ===== HERO SECTION ===== */
@@ -41,23 +130,18 @@ body {
 }
 
 .btn-dark {
-    background-color: #000;
-    border-color: #000;
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
 }
 
 .btn-dark:hover {
-    background-color: #333;
-    border-color: #333;
+    background-color: #162e6e;
+    border-color: #162e6e;
 }
 
 .btn-outline-light:hover {
     background-color: #ffffff;
     color: #000;
-}
-
-/* ===== DASHBOARD SIDEBAR MATCHING ===== */
-.bg-dark {
-    background-color: #1f1f1f !important;
 }
 
 
@@ -101,7 +185,7 @@ body {
 }
 
 .login-btn {
-    background: #111;
+    background: var(--primary-blue);
     border: none;
     padding: 14px;
     font-weight: 500;
@@ -132,27 +216,130 @@ body {
 .divider:before { left: 0; }
 .divider:after { right: 0; }
 
-/* ===== SPENDING LOG TABLE SCROLL ===== */
-.transaction-table-scroll {
-    height: 420px;
-    max-height: 420px;
-    overflow-y: auto !important;
-    overflow-x: auto;
-    display: block;
+
+/* Transaction table scroll area */
+/* Make only transaction table scroll */
+/* Fixed height scrollable transaction table */
+.table-container {
+    max-height: 420px;   /* adjust height here */
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-.transaction-table-scroll thead th {
+/* Keep header visible */
+.table-container thead th {
     position: sticky;
     top: 0;
-    z-index: 1;
-    background: #f5f5f5;
+    background: var(--surface-grey-soft);
+    z-index: 2;
 }
 
-.transaction-table-scroll::-webkit-scrollbar {
-    width: 10px;
+/* ===== APP LAYOUT ===== */
+.app-layout {
+    display: flex;
+    min-height: 100vh;
 }
 
-.transaction-table-scroll::-webkit-scrollbar-thumb {
-    background: #b6bcc6;
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid #e5e7eb;
+    padding: 30px 18px;
+    transition: width 0.3s ease;
+}
+
+/* Collapsed sidebar */
+.sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar.collapsed .sidebar-title,
+.sidebar.collapsed span,
+.sidebar.collapsed .logo {
+    display: none;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+    flex: 1;
+    background: var(--background-light);
+    padding: 0;
+    display: block;   /* remove flex centering */
+}
+
+.content-wrapper {
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;     /* controls how wide dashboard is */
+    padding: 0 24px;
+}
+
+/* Keep page content centered regardless of sidebar state */
+.main-content {
+    margin-left: 0;
+}
+
+.sidebar.collapsed ~ .main-content {
+    margin-left: 0;
+}
+
+/* Spending log alignment */
+.spending-log-page {
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto 0 0;
+}
+
+/* Grey surfaces across app pages */
+.card {
+    background-color: var(--surface-grey-soft);
+    border: 1px solid var(--surface-border);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+/* Slightly deeper grey for spending log sections */
+.spending-log-page .card {
+    background-color: var(--surface-grey-soft);
+}
+
+.spending-log-page .form-control,
+.spending-log-page .form-select {
+    background-color: #ffffff;
+    border-color: var(--surface-border);
+}
+
+/* Spending log transaction table styling */
+.spending-table-wrap {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
     border-radius: 8px;
+}
+
+.spending-table {
+    margin-bottom: 0;
+    background: transparent;
+}
+
+.spending-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-grey-soft);
+    z-index: 2;
+    border-bottom: 1px solid #e6e8ed;
+    font-weight: 700;
+    color: #111827;
+    padding: 14px 10px;
+}
+
+.spending-table tbody td {
+    padding: 14px 10px;
+    border-color: #eceff3;
+    color: #111827;
+    vertical-align: middle;
+}
+
+.spending-table tbody tr:hover {
+    background-color: #f8fafc;
 }
