@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block content %}
 
 <h2 class="mb-4">Spending Log</h2>
@@ -11,7 +11,7 @@
         <!-- ADD ENTRY CARD -->
         <div class="card shadow-sm p-4 mb-4">
 
-            <form method="POST">
+            <form method="POST" id="addEntryForm">
 
                 <div class="row">
 
@@ -23,22 +23,15 @@
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Category</label>
 
-                        <select name="category"
-                                id="categorySelect"
-                                class="form-select"
-                                required>
+                        <select name="category" id="categorySelect" class="form-select" required>
                             {% for cat in categories %}
-                                <option value="{{ cat }}">{{ cat }}</option>
+                            <option value="{{ cat }}">{{ cat }}</option>
                             {% endfor %}
                             <option value="Other">Other</option>
                         </select>
 
-                        <input type="text"
-                               id="customCategory"
-                               name="custom_category"
-                               class="form-control mt-2"
-                               placeholder="Enter new category"
-                               style="display:none;">
+                        <input type="text" id="customCategory" name="custom_category" class="form-control mt-2"
+                            placeholder="Enter new category" style="display:none;">
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -74,12 +67,49 @@
 
 
         <!-- FILTER TOGGLE -->
-        <div class="mb-3 d-flex gap-2">
-            <button class="btn btn-outline-dark btn-sm">7 Days</button>
-            <button class="btn btn-outline-dark btn-sm">30 Days</button>
-            <button class="btn btn-outline-dark btn-sm">3 Months</button>
-            <button class="btn btn-dark btn-sm">All Time</button>
-        </div>
+        <div class="mb-3 d-flex gap-2 align-items-center">
+
+            <a href="/spending-log?filter=7" data-filter="7"
+               class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '7' else 'btn-outline-dark' }}">
+        7 Days
+    </a>
+
+            <a href="/spending-log?filter=30" data-filter="30"
+               class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '30' else 'btn-outline-dark' }}">
+        30 Days
+    </a>
+
+            <a href="/spending-log?filter=90" data-filter="90"
+               class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == '90' else 'btn-outline-dark' }}">
+        3 Months
+    </a>
+
+    <!-- 🔵 MONTH DROPDOWN -->
+    <form method="GET" action="/spending-log">
+        <select name="month" id="monthSelect"
+                class="form-select form-select-sm"
+                style="width:auto; display:inline-block;">
+
+            <option value="">Select Month</option>
+
+            {% for i in range(1,13) %}
+                <option value="{{ i }}"
+                    {% if active_month and active_month|int == i %} selected {% endif %}>
+                    {{ [
+                        'January','February','March','April','May','June',
+                        'July','August','September','October','November','December'
+                    ][i-1] }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+            <a href="/spending-log?filter=all" data-filter="all"
+               class="btn btn-sm filter-btn {{ 'btn-dark' if active_filter == 'all' else 'btn-outline-dark' }}">
+        All Time
+    </a>
+
+</div>
 
 
         <!-- TRANSACTION TABLE -->
@@ -87,7 +117,7 @@
 
             <h6 class="mb-3">Transaction History</h6>
 
-            <div class="table-responsive">
+            <div class="table-responsive transaction-table-scroll">
                 <table class="table align-middle">
 
                     <thead>
@@ -101,25 +131,47 @@
                         </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody id="transactionsBody">
 
                         {% for t in transactions %}
-                        <tr>
-                            <td>{{ t.date.strftime("%d %b %Y") }}</td>
-                            <td>{{ t.category }}</td>
-                            <td>{{ t.description }}</td>
-                            <td>
+                        <tr data-id="{{ t._id }}">
+
+                            <td class="date-cell">
+                                {{ t.date.strftime("%d %b %Y") }}
+                            </td>
+
+                            <td class="category-cell">
+                                {{ t.category }}
+                            </td>
+
+                            <td class="description-cell">
+                                {{ t.description }}
+                            </td>
+
+                            <td class="type-cell">
                                 {% if t.type == "expense" %}
-                                    <span class="badge bg-danger">Expense</span>
+                                <span class="badge bg-danger">Expense</span>
                                 {% else %}
-                                    <span class="badge bg-success">Income</span>
+                                <span class="badge bg-success">Income</span>
                                 {% endif %}
                             </td>
-                            <td>£{{ t.amount }}</td>
+
+                            <td class="amount-cell">
+                                £{{ t.amount }}
+                            </td>
+
                             <td class="text-end">
 
-                                <a href="/delete-transaction/{{ t._id }}"
-                                   class="btn btn-sm btn-outline-danger">
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-1 edit-btn">
+                                    ✏️
+                                </button>
+
+                                <button type="button" class="btn btn-sm btn-success me-1 save-btn"
+                                    style="display:none;">
+                                    ✔
+                                </button>
+
+                                <a href="/delete-transaction/{{ t._id }}" class="btn btn-sm btn-outline-danger">
                                     🗑
                                 </a>
 
@@ -150,11 +202,11 @@
 
         <div class="card shadow-sm p-4 text-center">
 
-            {% if chart_values|length == 0 %}
-                <p class="text-muted m-0">No data available</p>
-            {% else %}
-                <canvas id="categoryChart"></canvas>
-            {% endif %}
+            <p id="noChartDataMsg" class="text-muted m-0" {% if chart_values|length != 0 %}style="display:none;"{% endif %}>No data available</p>
+            <canvas id="categoryChart"
+                data-labels='{{ chart_labels | tojson }}'
+                data-values='{{ chart_values | tojson }}'
+                {% if chart_values|length == 0 %}style="display:none;"{% endif %}></canvas>
 
         </div>
 
@@ -165,69 +217,273 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
+        const chartCanvas = document.getElementById("categoryChart");
+        const noChartDataMsg = document.getElementById("noChartDataMsg");
+        const transactionsBody = document.getElementById("transactionsBody");
+        const monthSelect = document.getElementById("monthSelect");
+        const addEntryForm = document.getElementById("addEntryForm");
+        const categorySelect = document.getElementById("categorySelect");
+        const customInput = document.getElementById("customCategory");
+        const filterButtons = document.querySelectorAll(".filter-btn");
 
-    {% if chart_values|length != 0 %}
+        const currentState = {
+            filter: "{{ active_filter }}",
+            month: "{{ active_month if active_month else '' }}"
+        };
 
-    const ctx = document.getElementById('categoryChart').getContext('2d');
+        let categoryChart = null;
 
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ chart_labels|safe }},
-            datasets: [{
-                data: {{ chart_values|safe }},
-                backgroundColor: [
-                    '#4e73df',
-                    '#1cc88a',
-                    '#36b9cc',
-                    '#f6c23e',
-                    '#e74a3b',
-                    '#858796',
-                    '#6610f2',
-                    '#fd7e14'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            cutout: '70%',
-            animation: {
-                animateRotate: true,
-                duration: 1400
-            },
-            plugins: {
-                legend: {
-                    position: 'bottom'
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function setActiveFilterButton(activeFilter) {
+            filterButtons.forEach((button) => {
+                const isActive = button.dataset.filter === activeFilter;
+                button.classList.toggle("btn-dark", isActive);
+                button.classList.toggle("btn-outline-dark", !isActive);
+            });
+        }
+
+        function renderTransactions(transactions) {
+            if (!transactionsBody) return;
+
+            if (!transactions || transactions.length === 0) {
+                transactionsBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No transactions yet.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            transactionsBody.innerHTML = transactions.map((t) => `
+                <tr data-id="${escapeHtml(t.id)}">
+                    <td class="date-cell">${escapeHtml(t.date)}</td>
+                    <td class="category-cell">${escapeHtml(t.category)}</td>
+                    <td class="description-cell">${escapeHtml(t.description)}</td>
+                    <td class="type-cell">
+                        ${t.type === "expense"
+                            ? '<span class="badge bg-danger">Expense</span>'
+                            : '<span class="badge bg-success">Income</span>'}
+                    </td>
+                    <td class="amount-cell">£${escapeHtml(t.amount)}</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-1 edit-btn">✏️</button>
+                        <button type="button" class="btn btn-sm btn-success me-1 save-btn" style="display:none;">✔</button>
+                        <a href="/delete-transaction/${escapeHtml(t.id)}" class="btn btn-sm btn-outline-danger">🗑</a>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        function renderChart(labels, values) {
+            if (!chartCanvas) return;
+
+            const hasData = Array.isArray(values) && values.length > 0;
+            chartCanvas.style.display = hasData ? "block" : "none";
+            if (noChartDataMsg) {
+                noChartDataMsg.style.display = hasData ? "none" : "block";
+            }
+
+            if (!hasData) {
+                if (categoryChart) {
+                    categoryChart.destroy();
+                    categoryChart = null;
                 }
+                return;
+            }
+
+            if (!categoryChart) {
+                categoryChart = new Chart(chartCanvas.getContext("2d"), {
+                    type: "doughnut",
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                "#4e73df",
+                                "#1cc88a",
+                                "#36b9cc",
+                                "#f6c23e",
+                                "#e74a3b",
+                                "#858796",
+                                "#6610f2",
+                                "#fd7e14"
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        cutout: "70%",
+                        animation: {
+                            animateRotate: true,
+                            animateScale: true,
+                            duration: 900,
+                            easing: "easeOutQuart"
+                        },
+                        transitions: {
+                            active: {
+                                animation: {
+                                    duration: 500
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: "bottom"
+                            }
+                        }
+                    }
+                });
+            } else {
+                categoryChart.data.labels = labels;
+                categoryChart.data.datasets[0].data = values;
+                categoryChart.update();
             }
         }
-    });
 
-    {% endif %}
+        async function loadSpendingData() {
+            const params = new URLSearchParams();
+            if (currentState.filter) params.set("filter", currentState.filter);
+            if (currentState.month) params.set("month", currentState.month);
+            params.set("format", "json");
 
-    // Custom Category Toggle
-    const categorySelect = document.getElementById("categorySelect");
-    const customInput = document.getElementById("customCategory");
+            const response = await fetch(`/spending-log?${params.toString()}`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            });
+            if (!response.ok) return;
 
-    if (categorySelect) {
-        categorySelect.addEventListener("change", function() {
-            if (this.value === "Other") {
-                customInput.style.display = "block";
-                customInput.required = true;
-            } else {
-                customInput.style.display = "none";
-                customInput.required = false;
+            const data = await response.json();
+            renderTransactions(data.transactions || []);
+            renderChart(data.chart_labels || [], data.chart_values || []);
+            bindInlineEditHandlers();
+
+            const activeFilter = data.active_filter || "all";
+            currentState.filter = activeFilter;
+            currentState.month = data.active_month ? String(data.active_month) : "";
+            setActiveFilterButton(activeFilter);
+
+            if (monthSelect) {
+                monthSelect.value = currentState.month;
             }
-        });
-    }
+        }
 
-});
+        function bindInlineEditHandlers() {
+            document.querySelectorAll(".edit-btn").forEach((button) => {
+                button.onclick = function () {
+                    const row = this.closest("tr");
+                    const id = row.dataset.id;
+
+                    const dateText = row.querySelector(".date-cell").innerText.trim();
+                    const categoryText = row.querySelector(".category-cell").innerText.trim();
+                    const descriptionText = row.querySelector(".description-cell").innerText.trim();
+                    const typeText = row.querySelector(".type-cell").innerText.trim();
+                    const amountText = row.querySelector(".amount-cell").innerText.replace(/[^\d.-]/g, "").trim();
+
+                    const dateObj = new Date(dateText);
+                    const formattedDate = dateObj.toISOString().split("T")[0];
+
+                    row.querySelector(".date-cell").innerHTML =
+                        `<input type="date" name="date" value="${formattedDate}" class="form-control form-control-sm">`;
+
+                    row.querySelector(".category-cell").innerHTML =
+                        `<input type="text" name="category" value="${escapeHtml(categoryText)}" class="form-control form-control-sm">`;
+
+                    row.querySelector(".description-cell").innerHTML =
+                        `<input type="text" name="description" value="${escapeHtml(descriptionText)}" class="form-control form-control-sm">`;
+
+                    row.querySelector(".type-cell").innerHTML =
+                        `<select name="type" class="form-select form-select-sm">
+                            <option value="expense" ${typeText.includes("Expense") ? "selected" : ""}>Expense</option>
+                            <option value="income" ${typeText.includes("Income") ? "selected" : ""}>Income</option>
+                        </select>`;
+
+                    row.querySelector(".amount-cell").innerHTML =
+                        `<input type="number" step="0.01" name="amount" value="${amountText}" class="form-control form-control-sm">`;
+
+                    this.style.display = "none";
+                    const saveButton = row.querySelector(".save-btn");
+                    saveButton.style.display = "inline-block";
+
+                    saveButton.onclick = function () {
+                        const formData = new FormData();
+                        formData.append("date", row.querySelector("input[name='date']").value);
+                        formData.append("category", row.querySelector("input[name='category']").value);
+                        formData.append("description", row.querySelector("input[name='description']").value);
+                        formData.append("type", row.querySelector("select[name='type']").value);
+                        formData.append("amount", row.querySelector("input[name='amount']").value);
+
+                        fetch(`/update-transaction/${id}`, {
+                            method: "POST",
+                            body: formData
+                        }).then(() => loadSpendingData());
+                    };
+                };
+            });
+        }
+
+        if (categorySelect) {
+            categorySelect.addEventListener("change", function () {
+                if (this.value === "Other") {
+                    customInput.style.display = "block";
+                    customInput.required = true;
+                } else {
+                    customInput.style.display = "none";
+                    customInput.required = false;
+                }
+            });
+        }
+
+        if (monthSelect) {
+            monthSelect.addEventListener("change", function () {
+                currentState.filter = "all";
+                currentState.month = this.value;
+                loadSpendingData();
+            });
+        }
+
+        filterButtons.forEach((button) => {
+            button.addEventListener("click", function (event) {
+                event.preventDefault();
+                currentState.filter = this.dataset.filter || "all";
+                currentState.month = "";
+                loadSpendingData();
+            });
+        });
+
+        if (addEntryForm) {
+            addEntryForm.addEventListener("submit", async function (event) {
+                event.preventDefault();
+                const response = await fetch("/spending-log", {
+                    method: "POST",
+                    body: new FormData(addEntryForm)
+                });
+                if (!response.ok) return;
+
+                addEntryForm.reset();
+                if (customInput) {
+                    customInput.style.display = "none";
+                    customInput.required = false;
+                }
+                await loadSpendingData();
+            });
+        }
+
+        const initialLabels = chartCanvas ? JSON.parse(chartCanvas.dataset.labels || "[]") : [];
+        const initialValues = chartCanvas ? JSON.parse(chartCanvas.dataset.values || "[]") : [];
+        renderChart(initialLabels, initialValues);
+        bindInlineEditHandlers();
+        setActiveFilterButton(currentState.filter || "all");
+    });
 </script>
 
 {% endblock %}

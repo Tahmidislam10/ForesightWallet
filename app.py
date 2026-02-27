@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, jsonify
 from pymongo import MongoClient
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from bson.objectid import ObjectId
 from collections import defaultdict
-import json 
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -146,6 +146,33 @@ def delete_transaction(id):
 
     return redirect("/spending-log")
 
+
+# ==========================
+# update transaction
+# ==========================
+
+@app.route("/update-transaction/<id>", methods=["POST"])
+def update_transaction(id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    category = request.form["category"]
+    if category == "Other":
+        category = request.form.get("custom_category")
+
+    spending_collection.update_one(
+        {"_id": ObjectId(id), "user_id": session["user_id"]},
+        {"$set": {
+            "date": datetime.strptime(request.form["date"], "%Y-%m-%d"),
+            "category": category,
+            "description": request.form["description"],
+            "amount": float(request.form["amount"]),
+            "type": request.form["type"]
+        }}
+    )
+
+    return redirect("/spending-log")
+
 # ==========================
 # SPENDING LOG
 # ==========================
@@ -159,22 +186,23 @@ PREMADE_CATEGORIES = [
     "Health",
     "Education",
     "Salary",
-    "Investments",
-    "Other"
+    "Investments"
 ]
-
 
 @app.route("/spending-log", methods=["GET", "POST"])
 def spending_log():
+
     if "user_id" not in session:
         return redirect("/login")
 
+    # ------------------------
+    # HANDLE POST (ADD ENTRY)
+    # ------------------------
     if request.method == "POST":
 
-        # Handle custom category
         category = request.form["category"]
         if category == "Other":
-            category = request.form["custom_category"]
+            category = request.form.get("custom_category")
 
         new_entry = {
             "user_id": session["user_id"],
@@ -189,20 +217,47 @@ def spending_log():
         spending_collection.insert_one(new_entry)
         return redirect("/spending-log")
 
-    
-    
+    # ------------------------
+    # HANDLE FILTERS
+    # ------------------------
 
-    # -----------------------------
-    # GET REQUEST
-    # -----------------------------
+    filter_option = request.args.get("filter", "all")
+    month_option = request.args.get("month")
+
+    query = {"user_id": session["user_id"]}
+
+    # 🔹 7 / 30 / 90 filters
+    if filter_option == "7":
+        cutoff = datetime.utcnow() - timedelta(days=7)
+        query["date"] = {"$gte": cutoff}
+
+    elif filter_option == "30":
+        cutoff = datetime.utcnow() - timedelta(days=30)
+        query["date"] = {"$gte": cutoff}
+
+    elif filter_option == "90":
+        cutoff = datetime.utcnow() - timedelta(days=90)
+        query["date"] = {"$gte": cutoff}
+
+    # 🔹 MONTH FILTER (overrides date filter if selected)
+    if month_option:
+        month_option = int(month_option)
+        query["$expr"] = {
+            "$eq": [{"$month": "$date"}, month_option]
+        }
+
+    # ------------------------
+    # FETCH TRANSACTIONS
+    # ------------------------
 
     transactions = list(
-        spending_collection.find(
-            {"user_id": session["user_id"]}
-        ).sort("date", -1)
+        spending_collection.find(query).sort("date", -1)
     )
 
-    # Aggregate expenses by category for chart
+    # ------------------------
+    # BUILD CHART DATA
+    # ------------------------
+
     category_totals = defaultdict(float)
 
     for t in transactions:
@@ -212,12 +267,34 @@ def spending_log():
     chart_labels = list(category_totals.keys())
     chart_values = list(category_totals.values())
 
+    if request.args.get("format") == "json":
+        serialized_transactions = []
+        for t in transactions:
+            serialized_transactions.append({
+                "id": str(t["_id"]),
+                "date": t["date"].strftime("%d %b %Y"),
+                "category": t["category"],
+                "description": t["description"],
+                "type": t["type"],
+                "amount": t["amount"]
+            })
+
+        return jsonify({
+            "transactions": serialized_transactions,
+            "chart_labels": chart_labels,
+            "chart_values": chart_values,
+            "active_filter": filter_option,
+            "active_month": month_option
+        })
+
     return render_template(
         "spending_log.html",
         transactions=transactions,
         categories=PREMADE_CATEGORIES,
-        chart_labels=json.dumps(chart_labels),
-        chart_values=json.dumps(chart_values)
+        chart_labels=chart_labels,
+        chart_values=chart_values,
+        active_filter=filter_option,
+        active_month=month_option
     )
 
 # ==========================
