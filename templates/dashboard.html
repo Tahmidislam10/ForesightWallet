@@ -138,11 +138,21 @@
     </div>
 </div>
 
+<script id="dashboard-chart-data" type="application/json">
+    {{ {
+        "labels": labels,
+        "values": values,
+        "comparisonValues": comparison_values,
+        "compareEnabled": compare == "true"
+    } | tojson }}
+</script>
+
 <script>
-    const labels = {{ labels | tojson }};
-    const values = {{ values | tojson }};
-    const comparisonValues = {{ comparison_values | tojson }};
-    const compareEnabled = "{{ compare }}" === "true";
+    const chartData = JSON.parse(document.getElementById("dashboard-chart-data").textContent);
+    const labels = chartData.labels;
+    const values = chartData.values;
+    const comparisonValues = chartData.comparisonValues;
+    const compareEnabled = chartData.compareEnabled;
 
     const formattedLabels = labels.map(d => {
         const date = new Date(d);

@@ -60,7 +60,7 @@
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card shadow-sm p-3">
                 <h6>Spending Log Impact</h6>
                 <h3 class="{% if net_spending_log < 0 %}text-danger{% else %}text-success{% endif %}">
@@ -68,7 +68,24 @@
                 </h3>
             </div>
         </div>
-    </div>
+
+        <div class="col-md-2">
+            <div class="card shadow-sm p-3">
+                <h6>Income Added</h6>
+                <h3 class="text-success">
+                    £{{ "%.2f"|format(month_income_total) }}
+                </h3>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card shadow-sm p-3">
+                <h6>Expenses Deducted</h6>
+                <h3 class="text-danger">
+                    £{{ "%.2f"|format(month_expense_total) }}
+                </h3>
+            </div>
+        </div>
 
     <div class="row g-4 mb-4">
         <div class="col-lg-12">
@@ -99,14 +116,7 @@
                                 </small>
 
                                 <div class="progress mt-2" style="height: 10px;">
-                                    <div class="progress-bar 
-                                        {% if spending_limit_used_pct < 60 %}
-                                            bg-success
-                                        {% elif spending_limit_used_pct < 85 %}
-                                            bg-warning
-                                        {% else %}
-                                            bg-danger
-                                        {% endif %}"
+                                    <div class="progress-bar {{ 'bg-success' if spending_limit_used_pct < 60 else 'bg-warning' if spending_limit_used_pct < 85 else 'bg-danger' }}"
                                         role="progressbar"
                                         style="width: {{ spending_limit_used_pct }}%;"
                                         aria-valuenow="{{ spending_limit_used_pct }}"
