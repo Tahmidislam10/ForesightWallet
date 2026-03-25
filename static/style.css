@@ -343,3 +343,31 @@ body {
 .spending-table tbody tr:hover {
     background-color: #f8fafc;
 }
+
+/* Budget tracker styling */
+.budget-tracker-page .form-control,
+.budget-tracker-page .form-select {
+    background-color: #ffffff;
+    border-color: var(--surface-border);
+}
+
+.budget-table-wrap {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.budget-table thead th {
+    background: var(--surface-grey-soft);
+    border-bottom: 1px solid #e6e8ed;
+    color: #111827;
+    font-weight: 700;
+}
+
+.budget-table td,
+.budget-table th {
+    vertical-align: middle;
+}
+
+.budget-table tbody tr:hover {
+    background-color: #f8fafc;
+}

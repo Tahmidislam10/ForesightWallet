@@ -1,55 +1,274 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h2 class="mb-4">Dashboard</h2>
+<h2 class="mb-4"> Dashboard</h2>
 
-{% if empty %}
+<!-- ================= MONTHLY FINANCIAL ENGINE ================= -->
+<div class="row g-4 mb-4">
 
-<div class="alert alert-warning text-center shadow-sm">
-    <h5 class="mb-2">No dashboard data available</h5>
-    <p class="mb-3">Please submit entries in the Spending Log to view analytics.</p>
-    <a href="/spending-log" class="btn btn-dark">
-        Go to Spending Log
-    </a>
-</div>
-
-{% else %}
-
-<!-- Summary Cards -->
-<div class="row g-4">
-
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6>Total Income</h6>
-                <h4>£{{ total_income }}</h4>
-            </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6>Current Budget</h6>
+            <h3 class="{% if summary.current_budget < 0 %}text-danger{% else %}text-success{% endif %}">
+                £{{ summary.current_budget }}
+            </h3>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6>Total Expenses</h6>
-                <h4>£{{ total_expense }}</h4>
-            </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6>Projected End Balance</h6>
+            <h3 class="{% if summary.projected_end_balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                £{{ summary.projected_end_balance }}
+            </h3>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card shadow-sm {% if savings < 0 %}border-danger{% endif %}">
-            <div class="card-body">
-                <h6>Net Savings</h6>
-                <h4 class="{% if savings < 0 %}text-danger{% else %}text-success{% endif %}">
-                    £{{ savings }}
-                </h4>
-            </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6>Daily Burn Rate</h6>
+            <h3>£{{ summary.burn_rate }}</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6>Budget Usage</h6>
+            <h3>{{ summary.budget_usage_pct }}%</h3>
         </div>
     </div>
 
 </div>
 
+{% if summary.projected_end_balance < 0 %}
+<div class="alert alert-danger mb-4">
+    ⚠ At your current spending pace, you are projected to exceed your budget this month.
+</div>
 {% endif %}
+
+<!-- ================= CONTROL BAR ================= -->
+<div class="d-flex gap-3 mb-4 align-items-center">
+
+    <select id="rangeSelect" class="form-select w-auto">
+        <option value="7" {% if range_option == "7" %}selected{% endif %}>Last 7 Days</option>
+        <option value="30" {% if range_option == "30" %}selected{% endif %}>Last 30 Days</option>
+        <option value="90" {% if range_option == "90" %}selected{% endif %}>Last 3 Months</option>
+    </select>
+
+    <select id="monthSelect" class="form-select w-auto">
+        {% set month_names = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ] %}
+        {% for i in range(1,13) %}
+        <option value="{{ i }}" {% if month_option|int == i %}selected{% endif %}>{{ month_names[i - 1] }}</option>
+        {% endfor %}
+    </select>
+
+    <button id="compareToggle" class="btn btn-outline-primary">
+        Toggle Comparison
+    </button>
+
+</div>
+
+<!-- ================= KPI CARDS ================= -->
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6>Total (Selected Period)</h6>
+            <h3>£{{ values | sum }}</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6>Number of Days</h6>
+            <h3>{{ labels | length }}</h3>
+        </div>
+    </div>
+
+    {% if compare == "true" %}
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3">
+            <h6>Comparison Active</h6>
+            <h3 class="text-warning">ON</h3>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- ================= CONNECTED TOTALS ================= -->
+<div class="card shadow-sm p-4 mb-4">
+    <h5 class="mb-3">Connected Spending Log Totals</h5>
+    <div class="table-responsive budget-table-wrap">
+        <table class="table budget-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th class="text-end">Amount (£)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Income Added</td>
+                    <td class="text-end text-success">£{{ "%.2f"|format(income_total) }}</td>
+                </tr>
+                <tr>
+                    <td>Expenses Deducted</td>
+                    <td class="text-end text-danger">£{{ "%.2f"|format(expense_total) }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Net Effect</strong></td>
+                    <td class="text-end {% if net_total < 0 %}text-danger{% else %}text-success{% endif %}">
+                        <strong>£{{ "%.2f"|format(net_total) }}</strong>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================= CHART ================= -->
+<div class="card shadow-sm p-4">
+    <h5 class="mb-3">Spending Trend</h5>
+    <div id="chartWrapper" style="touch-action: none;">
+        <div id="spendingChart"></div>
+    </div>
+</div>
+
+<script>
+    const labels = {{ labels | tojson }};
+    const values = {{ values | tojson }};
+    const comparisonValues = {{ comparison_values | tojson }};
+    const compareEnabled = "{{ compare }}" === "true";
+
+    const formattedLabels = labels.map(d => {
+        const date = new Date(d);
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    });
+
+    // Build series once and never mutate it
+    const seriesData = compareEnabled && comparisonValues.length > 0
+        ? [
+            { name: "Current Period", data: values },
+            { name: "Previous Period", data: comparisonValues }
+          ]
+        : [
+            { name: "Current Period", data: values }
+          ];
+
+    var options = {
+        chart: {
+            type: 'area',
+            height: 420,
+            zoom: {
+                enabled: true,
+                type: 'x',
+                autoScaleYaxis: true
+            },
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 600,
+                animateGradually: { enabled: true, delay: 60 },
+                dynamicAnimation: { enabled: true, speed: 350 }
+            },
+            toolbar: {
+                show: true,
+                tools: {
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true,
+                    download: true
+                }
+            }
+        },
+        series: seriesData,
+        xaxis: {
+            categories: formattedLabels,
+            title: { text: "Date" },
+            labels: {
+                rotate: -35,
+                style: { fontSize: '11px' }
+            },
+            tickAmount: Math.min(labels.length, 15)
+        },
+        yaxis: {
+            min: 0,
+            title: { text: "Amount (£)" },
+            labels: {
+                formatter: val => "£" + val.toFixed(2)
+            }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 3
+        },
+        colors: compareEnabled ? ['#3b82f6', '#f97316'] : ['#3b82f6'],
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.45,
+                opacityTo: 0.05,
+                stops: [0, 100]
+            }
+        },
+        markers: {
+            size: 4,
+            hover: { size: 7 }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: {
+                formatter: val => "£" + val.toFixed(2)
+            }
+        },
+        grid: {
+            borderColor: '#e0e0e0',
+            strokeDashArray: 4
+        },
+        dataLabels: { enabled: false }
+    };
+
+    var chart = new ApexCharts(document.querySelector("#spendingChart"), options);
+    chart.render();
+
+    // Block scroll wheel zoom
+    document.getElementById("chartWrapper").addEventListener("wheel", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+    }, { passive: false, capture: true });
+</script>
+
+<!-- ================= FILTER HANDLING ================= -->
+<script>
+    document.getElementById("rangeSelect").addEventListener("change", updateDashboard);
+    document.getElementById("monthSelect").addEventListener("change", updateDashboard);
+
+    document.getElementById("compareToggle").addEventListener("click", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const compare = urlParams.get("compare") === "true";
+        urlParams.set("compare", !compare);
+        window.location.search = urlParams.toString();
+    });
+
+    function updateDashboard() {
+        const range = document.getElementById("rangeSelect").value;
+        const month = document.getElementById("monthSelect").value;
+
+        let params = new URLSearchParams();
+        params.set("range", range);
+        if (month) params.set("month", month);
+
+        window.location.search = params.toString();
+    }
+</script>
 
 {% endblock %}

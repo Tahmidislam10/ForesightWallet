@@ -8,6 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
 </head>
 
 <body>
@@ -38,11 +40,8 @@
 
             <!-- SPENDING INSIGHTS -->
             <div class="sidebar-section">
-                <p class="sidebar-title">SPENDING INSIGHTS</p>
-                <a href="/insights">
-                    <i class="bi bi-graph-up"></i>
-                    <span>Insights</span>
-                </a>
+                <p class="sidebar-title"> INSIGHTS</p>
+               
                 <a href="/feedback">
                     <i class="bi bi-chat-left-text"></i>
                     <span>Personalised Feedback</span>
@@ -50,6 +49,11 @@
                 <a href="/budget-tracker">
                     <i class="bi bi-pie-chart"></i>
                     <span>Budget Tracker</span>
+                </a>
+
+                 <a href="/insights">
+                    <i class="bi bi-graph-up"></i>
+                    <span>Prediction</span>
                 </a>
             </div>
 
