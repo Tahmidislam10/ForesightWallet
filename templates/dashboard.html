@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="mb-4"> Dashboard</h2>
+<h2 class="mb-4">Dashboard</h2>
 
 <!-- ================= MONTHLY FINANCIAL ENGINE ================= -->
 <div class="row g-4 mb-4">
-
     <div class="col-md-3">
         <div class="card shadow-sm p-3">
             <h6>Current Budget</h6>
@@ -14,7 +13,6 @@
             </h3>
         </div>
     </div>
-
     <div class="col-md-3">
         <div class="card shadow-sm p-3">
             <h6>Projected End Balance</h6>
@@ -23,21 +21,18 @@
             </h3>
         </div>
     </div>
-
     <div class="col-md-3">
         <div class="card shadow-sm p-3">
             <h6>Daily Burn Rate</h6>
             <h3>£{{ summary.burn_rate }}</h3>
         </div>
     </div>
-
     <div class="col-md-3">
         <div class="card shadow-sm p-3">
             <h6>Budget Usage</h6>
             <h3>{{ summary.budget_usage_pct }}%</h3>
         </div>
     </div>
-
 </div>
 
 {% if summary.projected_end_balance < 0 %}
@@ -48,11 +43,10 @@
 
 <!-- ================= CONTROL BAR ================= -->
 <div class="d-flex gap-3 mb-4 align-items-center">
-
     <select id="rangeSelect" class="form-select w-auto">
-        <option value="7" {% if range_option == "7" %}selected{% endif %}>Last 7 Days</option>
-        <option value="30" {% if range_option == "30" %}selected{% endif %}>Last 30 Days</option>
-        <option value="90" {% if range_option == "90" %}selected{% endif %}>Last 3 Months</option>
+        <option value="7" {% if range_option=="7" %}selected{% endif %}>Last 7 Days</option>
+        <option value="30" {% if range_option=="30" %}selected{% endif %}>Last 30 Days</option>
+        <option value="90" {% if range_option=="90" %}selected{% endif %}>Last 3 Months</option>
     </select>
 
     <select id="monthSelect" class="form-select w-auto">
@@ -61,33 +55,29 @@
             'July', 'August', 'September', 'October', 'November', 'December'
         ] %}
         {% for i in range(1,13) %}
-        <option value="{{ i }}" {% if month_option|int == i %}selected{% endif %}>{{ month_names[i - 1] }}</option>
+        <option value="{{ i }}" {% if month_option|int==i %}selected{% endif %}>{{ month_names[i - 1] }}</option>
         {% endfor %}
     </select>
 
     <button id="compareToggle" class="btn btn-outline-primary">
         Toggle Comparison
     </button>
-
 </div>
 
 <!-- ================= KPI CARDS ================= -->
 <div class="row g-4 mb-4">
-
     <div class="col-md-3">
         <div class="card shadow-sm p-3">
             <h6>Total (Selected Period)</h6>
             <h3>£{{ values | sum }}</h3>
         </div>
     </div>
-
     <div class="col-md-3">
         <div class="card shadow-sm p-3">
             <h6>Number of Days</h6>
             <h3>{{ labels | length }}</h3>
         </div>
     </div>
-
     {% if compare == "true" %}
     <div class="col-md-3">
         <div class="card shadow-sm p-3">
@@ -96,7 +86,6 @@
         </div>
     </div>
     {% endif %}
-
 </div>
 
 <!-- ================= CONNECTED TOTALS ================= -->
@@ -130,23 +119,82 @@
     </div>
 </div>
 
-<!-- ================= CHART ================= -->
-<div class="card shadow-sm p-4">
-    <h5 class="mb-3">Spending Trend</h5>
+<!-- ================= SPENDING TREND CHART ================= -->
+<div class="card shadow-sm p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h5 class="mb-1">Spending Trend</h5>
+            <p class="text-muted small mb-0">
+                {% set month_names = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ] %}
+                {% if month_option %}
+                    {{ month_names[month_option|int - 1] }} total spend
+                {% endif %}
+            </p>
+        </div>
+        <!-- BlackBullion-style comparison summary — only shows when comparison is active -->
+        {% if compare == "true" and comparison_values %}
+            {% set current_total = values | sum %}
+            {% set prev_total = comparison_values | sum %}
+            {% set diff = current_total - prev_total %}
+            <div class="text-end">
+                <div class="fw-bold fs-5">£{{ "%.2f"|format(current_total) }}</div>
+                {% if diff < 0 %}
+                <div class="text-success small">
+                    ⬇ £{{ "%.2f"|format(diff|abs) }} less spent vs previous period
+                </div>
+                {% elif diff > 0 %}
+                <div class="text-danger small">
+                    ⬆ £{{ "%.2f"|format(diff) }} more spent vs previous period
+                </div>
+                {% else %}
+                <div class="text-muted small">
+                    Same as previous period
+                </div>
+                {% endif %}
+                <div class="text-muted small">vs. previous period (£{{ "%.2f"|format(prev_total) }})</div>
+            </div>
+        {% else %}
+            <div class="text-end">
+                <div class="fw-bold fs-5">£{{ "%.2f"|format(values | sum) }}</div>
+                <div class="text-muted small">Total spend this period</div>
+            </div>
+        {% endif %}
+    </div>
+
     <div id="chartWrapper" style="touch-action: none;">
         <div id="spendingChart"></div>
     </div>
 </div>
 
+<!-- ================= INCOME VS EXPENSES BAR CHART ================= -->
+<div class="card shadow-sm p-4 mb-4">
+    <h5 class="mb-1">Income vs Expenses</h5>
+    <p class="text-muted small mb-3">Last 6 months comparison</p>
+    <div id="incomeExpenseChart"></div>
+</div>
+
+<!-- ================= DATA ================= -->
 <script id="dashboard-chart-data" type="application/json">
-    {{ {
-        "labels": labels,
-        "values": values,
-        "comparisonValues": comparison_values,
-        "compareEnabled": compare == "true"
-    } | tojson }}
+{{ {
+    "labels": labels,
+    "values": values,
+    "comparisonValues": comparison_values,
+    "compareEnabled": compare == "true"
+} | tojson }}
 </script>
 
+<script id="dashboard-bar-data" type="application/json">
+{{ {
+    "labels": bar_labels,
+    "income": bar_income,
+    "expenses": bar_expenses
+} | tojson }}
+</script>
+
+<!-- ================= SPENDING TREND SCRIPT ================= -->
 <script>
     const chartData = JSON.parse(document.getElementById("dashboard-chart-data").textContent);
     const labels = chartData.labels;
@@ -159,7 +207,6 @@
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
     });
 
-    // Build series once and never mutate it
     const seriesData = compareEnabled && comparisonValues.length > 0
         ? [
             { name: "Current Period", data: values },
@@ -209,6 +256,7 @@
         },
         yaxis: {
             min: 0,
+            max: values.every(v => v === 0) ? 10 : undefined,
             title: { text: "Amount (£)" },
             labels: {
                 formatter: val => "£" + val.toFixed(2)
@@ -249,7 +297,6 @@
     var chart = new ApexCharts(document.querySelector("#spendingChart"), options);
     chart.render();
 
-    // Block scroll wheel zoom
     document.getElementById("chartWrapper").addEventListener("wheel", function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -257,12 +304,66 @@
     }, { passive: false, capture: true });
 </script>
 
+<!-- ================= INCOME VS EXPENSES SCRIPT ================= -->
+<script>
+    const barData = JSON.parse(document.getElementById("dashboard-bar-data").textContent);
+
+    var barOptions = {
+        chart: {
+            type: 'bar',
+            height: 350,
+            toolbar: { show: false },
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 600
+            }
+        },
+        series: [
+            { name: 'Income', data: barData.income },
+            { name: 'Expenses', data: barData.expenses }
+        ],
+        xaxis: {
+            categories: barData.labels,
+            title: { text: "Month" }
+        },
+        yaxis: {
+            min: 0,
+            title: { text: "Amount (£)" },
+            labels: {
+                formatter: val => "£" + val.toFixed(2)
+            }
+        },
+        colors: ['#1cc88a', '#e74a3b'],
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                columnWidth: '55%'
+            }
+        },
+        dataLabels: { enabled: false },
+        legend: { position: 'top' },
+        tooltip: {
+            y: {
+                formatter: val => "£" + val.toFixed(2)
+            }
+        },
+        grid: {
+            borderColor: '#e0e0e0',
+            strokeDashArray: 4
+        }
+    };
+
+    var barChart = new ApexCharts(document.querySelector("#incomeExpenseChart"), barOptions);
+    barChart.render();
+</script>
+
 <!-- ================= FILTER HANDLING ================= -->
 <script>
     document.getElementById("rangeSelect").addEventListener("change", updateDashboard);
     document.getElementById("monthSelect").addEventListener("change", updateDashboard);
 
-    document.getElementById("compareToggle").addEventListener("click", function () {
+    document.getElementById("compareToggle").addEventListener("click", function() {
         const urlParams = new URLSearchParams(window.location.search);
         const compare = urlParams.get("compare") === "true";
         urlParams.set("compare", !compare);
@@ -272,11 +373,9 @@
     function updateDashboard() {
         const range = document.getElementById("rangeSelect").value;
         const month = document.getElementById("monthSelect").value;
-
         let params = new URLSearchParams();
         params.set("range", range);
         if (month) params.set("month", month);
-
         window.location.search = params.toString();
     }
 </script>

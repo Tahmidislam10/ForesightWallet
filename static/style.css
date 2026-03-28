@@ -237,7 +237,8 @@ body {
 /* ===== APP LAYOUT ===== */
 .app-layout {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 }
 
 /* ===== SIDEBAR ===== */
@@ -245,7 +246,10 @@ body {
     width: 260px;
     background: var(--sidebar-bg);
     border-right: 1px solid #e5e7eb;
+    height: 100vh;
     padding: 30px 18px;
+    overflow-y: auto;
+    flex-shrink: 0;
     transition: width 0.3s ease;
 }
 
@@ -264,6 +268,9 @@ body {
 .main-content {
     flex: 1;
     background: var(--background-light);
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 0;
     display: block;   /* remove flex centering */
 }

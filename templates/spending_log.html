@@ -215,8 +215,6 @@
 </div>
 
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const chartCanvas = document.getElementById("categoryChart");
@@ -298,6 +296,15 @@
                 if (categoryChart) {
                     categoryChart.destroy();
                     categoryChart = null;
+                }
+                return;
+            }
+
+            if (typeof ApexCharts === "undefined") {
+                chartCanvas.style.display = "none";
+                if (noChartDataMsg) {
+                    noChartDataMsg.textContent = "Chart failed to load";
+                    noChartDataMsg.style.display = "block";
                 }
                 return;
             }
