@@ -111,15 +111,13 @@ def dashboard():
             comparison_values = [round(previous_daily.get(d, 0), 2) for d in labels]
 
     # -------------------------
-    # INCOME VS EXPENSE BAR CHART
-    # Last 6 months of data
+    # INCOME VS EXPENSE BAR CHART — Last 6 months
     # -------------------------
     bar_labels = []
     bar_income = []
     bar_expenses = []
 
     for i in range(5, -1, -1):
-        # Work out which month we're calculating
         month_offset = now.month - i
         year_offset = now.year
         if month_offset <= 0:
@@ -127,10 +125,7 @@ def dashboard():
             year_offset -= 1
 
         m_start = datetime(year_offset, month_offset, 1)
-        if month_offset == 12:
-            m_end = datetime(year_offset + 1, 1, 1)
-        else:
-            m_end = datetime(year_offset, month_offset + 1, 1)
+        m_end = datetime(year_offset + 1, 1, 1) if month_offset == 12 else datetime(year_offset, month_offset + 1, 1)
 
         m_transactions = list(spending_collection.find({
             "user_id": user_id,
@@ -144,6 +139,56 @@ def dashboard():
         bar_income.append(m_income)
         bar_expenses.append(m_expense)
 
+    # -------------------------
+    # YEAR OVERVIEW — Last 12 months expenses + monthly average
+    # -------------------------
+    year_labels = []
+    year_expenses = []
+
+    for i in range(12, 0, -1):
+        # Calculate correct month and year going back i months from now
+        total_months = now.year * 12 + now.month - 1 - i
+        year_offset = total_months // 12
+        month_offset = total_months % 12 + 1
+
+        m_start = datetime(year_offset, month_offset, 1)
+        m_end = datetime(year_offset + 1, 1, 1) if month_offset == 12 else datetime(year_offset, month_offset + 1, 1)
+
+        m_transactions = list(spending_collection.find({
+            "user_id": user_id,
+            "date": {"$gte": m_start, "$lt": m_end}
+        }))
+
+        m_expense = round(sum(t["amount"] for t in m_transactions if t.get("type") == "expense"), 2)
+
+        year_labels.append(f"{calendar.month_abbr[month_offset]} {str(year_offset)[2:]}")
+        year_expenses.append(m_expense)
+
+    months_with_data = [e for e in year_expenses if e > 0]
+    year_monthly_avg = round(sum(months_with_data) / len(months_with_data), 2) if months_with_data else 0
+    
+    # -------------------------
+    # CURRENT YEAR OVERVIEW — Jan to Dec of current year
+    # -------------------------
+    current_year_labels = []
+    current_year_expenses = []
+
+    for month_num in range(1, 13):
+        m_start = datetime(now.year, month_num, 1)
+        m_end = datetime(now.year + 1, 1, 1) if month_num == 12 else datetime(now.year, month_num + 1, 1)
+
+        m_transactions = list(spending_collection.find({
+            "user_id": user_id,
+            "date": {"$gte": m_start, "$lt": m_end}
+        }))
+
+        m_expense = round(sum(t["amount"] for t in m_transactions if t.get("type") == "expense"), 2)
+        current_year_labels.append(calendar.month_abbr[month_num])
+        current_year_expenses.append(m_expense)
+
+    current_year_months_with_data = [e for e in current_year_expenses if e > 0]
+    current_year_avg = round(sum(current_year_months_with_data) / len(current_year_months_with_data), 2) if current_year_months_with_data else 0
+
     return render_template(
         "dashboard.html",
         labels=labels, values=values,
@@ -154,7 +199,11 @@ def dashboard():
         net_total=net_total, summary=summary,
         bar_labels=bar_labels,
         bar_income=bar_income,
-        bar_expenses=bar_expenses
+        bar_expenses=bar_expenses,
+        year_labels=year_labels,
+        year_expenses=year_expenses,
+        year_monthly_avg=year_monthly_avg,
+        current_year_labels=current_year_labels,
+        current_year_expenses=current_year_expenses,
+        current_year_avg=current_year_avg,
     )
-    
-    
