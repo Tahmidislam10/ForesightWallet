@@ -36,7 +36,7 @@
     <div class="row g-4 mb-4">
         <div class="col-md-2">
             <div class="card shadow-sm p-3">
-                <h6>Current Budget</h6>
+                <h6>Net Salary</h6>
                 <h3 class="{% if current_budget < 0 %}text-danger{% endif %}">
                     £{{ "%.2f"|format(current_budget) }}
                 </h3>
@@ -44,7 +44,7 @@
         </div>
         <div class="col-md-2">
             <div class="card shadow-sm p-3">
-                <h6>Starting Budget</h6>
+                <h6>Monthly Income</h6>
                 <h3>£{{ "%.2f"|format(starting_budget) }}</h3>
             </div>
         </div>
@@ -120,6 +120,12 @@
                         <label class="form-label">Spending Limit (£)</label>
                         <input type="number" name="spending_limit" class="form-control" min="0" step="0.01"
                             value="{{ '%.2f'|format(spending_limit) }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Current Account Balance (£)</label>
+                        <small class="text-muted d-block mb-1">Enter your real bank balance. This carries forward each month automatically.</small>
+                        <input type="number" name="account_balance" class="form-control" min="0" step="0.01"
+                            value="{{ '%.2f'|format(account_balance) }}">
                     </div>
                     <div class="col-12">
                         <label class="form-label">Monthly Income (£)</label>

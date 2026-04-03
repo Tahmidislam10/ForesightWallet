@@ -20,11 +20,9 @@
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
 
-            <div class="sidebar-header d-flex justify-content-between align-items-center">
-                <h4 class="logo m-0">Foresight Wallet</h4>
-                <button id="sidebarToggle" class="btn btn-sm btn-outline-secondary">☰</button>
+            <div class="sidebar-header" style="padding: 10px -12px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Foresight Wallet" style="height: 69px; width: 220px; object-fit: contain; object-position: left center; margin-top: -18px;">
             </div>
-
             <!-- MAIN -->
             <div class="sidebar-section">
                 <p class="sidebar-title">MAIN</p>
@@ -71,15 +69,42 @@
         <!-- Main Content Area -->
         <div class="main-content">
 
-            <!-- Top Navbar -->
-            {% if user %}
-            <nav class="navbar navbar-light bg-white shadow-sm mb-4">
-                <div class="content-wrapper d-flex justify-content-end">
-                    <span class="me-3 fw-bold">Welcome, {{ user }}</span>
-                    <a href="/logout" class="btn btn-outline-dark btn-sm">Logout</a>
+          <!-- Top Navbar -->
+            <nav class="navbar navbar-light bg-white shadow-sm mb-4 px-4" style="position:sticky; top:0; z-index:1000;">
+                <div class="d-flex justify-content-between align-items-center w-100">
+
+                    <!-- Left: Toggle only -->
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="sidebarToggle" class="btn btn-sm btn-outline-secondary">☰</button>
+                    </div>
+
+                    <!-- Right: Avatar + Name + Logout -->
+                    {% if user %}
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="
+                            width: 38px;
+                            height: 38px;
+                            border-radius: 50%;
+                            background: #4e73df;
+                            color: white;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: 700;
+                            font-size: 14px;
+                            flex-shrink: 0;
+                        ">
+                            {{ user.first_name[0] | upper }}{{ user.last_name[0] | upper }}
+                        </div>
+                        <span class="fw-semibold text-dark">{{ user.first_name }} {{ user.last_name }}</span>
+                        <a href="/logout" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-box-arrow-right me-1"></i> Logout
+                        </a>
+                    </div>
+                    {% endif %}
+
                 </div>
             </nav>
-            {% endif %}
 
             <div class="content-wrapper">
                 {% block content %}{% endblock %}

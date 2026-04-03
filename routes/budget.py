@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, session
 from datetime import datetime
 import calendar
 from extensions import spending_collection, budget_collection
-from helpers import parse_float, normalize_section, get_prev_month_template
+from helpers import parse_float, normalize_section, get_prev_month_template, deduplicate_section
 
 budget_bp = Blueprint("budget", __name__)
 
@@ -57,11 +57,12 @@ def budget_tracker():
                 {"$set": {
                     "spending_limit": parse_float(request.form.get("spending_limit")),
                     "monthly_income": parse_float(request.form.get("monthly_income")),
+                    "account_balance": parse_float(request.form.get("account_balance")),
                     "updated_at": datetime.utcnow()
                 }},
                 upsert=True
             )
-
+            
         elif action == "reset_overview":
             budget_collection.update_one(
                 base_query,
@@ -80,11 +81,8 @@ def budget_tracker():
             keys = request.form.getlist(f"{prefix}_key")
             vals = request.form.getlist(f"{prefix}_val")
 
-            new_dict = {}
-            for k, v in zip(keys, vals):
-                if k.strip():
-                    new_dict[k.strip()] = parse_float(v)
-
+            new_dict = deduplicate_section(keys, vals)
+            
             budget_collection.update_one(
                 base_query,
                 {"$set": {field: new_dict, "updated_at": datetime.utcnow()}},
@@ -101,6 +99,46 @@ def budget_tracker():
 
     spending_limit = parse_float(budget_doc.get("spending_limit"))
     monthly_income = parse_float(budget_doc.get("monthly_income"))
+    account_balance = parse_float(budget_doc.get("account_balance"))
+
+    # Carry forward balance from previous month if not set
+    if account_balance == 0.0:
+        if selected_month_int == 1:
+            prev_year, prev_month = selected_year_int - 1, 12
+        else:
+            prev_year, prev_month = selected_year_int, selected_month_int - 1
+
+        prev_doc = budget_collection.find_one({
+            "user_id": session["user_id"],
+            "year": prev_year,
+            "month": prev_month
+        }) or {}
+
+        prev_balance = parse_float(prev_doc.get("account_balance"))
+        prev_income = parse_float(prev_doc.get("monthly_income"))
+        prev_savings = sum(normalize_section(prev_doc.get("savings", {})).values())
+        prev_bills = sum(normalize_section(prev_doc.get("bills", {})).values())
+        prev_debts = sum(normalize_section(prev_doc.get("debts", {})).values())
+        prev_deductions = prev_savings + prev_bills + prev_debts
+
+        from datetime import datetime as dt
+        prev_month_start = dt(prev_year, prev_month, 1)
+        if prev_month == 12:
+            prev_month_end = dt(prev_year + 1, 1, 1)
+        else:
+            prev_month_end = dt(prev_year, prev_month + 1, 1)
+
+        prev_transactions = list(spending_collection.find({
+            "user_id": session["user_id"],
+            "date": {"$gte": prev_month_start, "$lt": prev_month_end}
+        }))
+
+        prev_income_log = sum(t["amount"] for t in prev_transactions if t.get("type") == "income")
+        prev_expense_log = sum(t["amount"] for t in prev_transactions if t.get("type") == "expense")
+
+        account_balance = round(
+            prev_balance + prev_income + prev_income_log - prev_expense_log - prev_deductions, 2
+        )
 
     raw_savings = budget_doc.get("savings")
     raw_bills = budget_doc.get("bills")
@@ -154,6 +192,7 @@ def budget_tracker():
         month_options=month_options,
         spending_limit=spending_limit,
         monthly_income=monthly_income,
+        account_balance=account_balance,
         savings_data=savings_data,
         bills_data=bills_data,
         debts_data=debts_data,

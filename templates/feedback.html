@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-1">Personalised Feedback</h2>
+<p class="text-muted mb-4">Category-level spending tips based on your transactions for the selected month.</p>
+
+<!-- SELECTOR -->
+<div class="card shadow-sm p-3 mb-4">
+    <form method="GET" action="/feedback" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Month</label>
+            <select name="month" class="form-select">
+                {% for m in month_options %}
+                <option value="{{ m.value }}" {% if selected_month == m.value %}selected{% endif %}>{{ m.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Year</label>
+            <select name="year" class="form-select">
+                {% for y in years %}
+                <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" name="analysed" value="true" class="btn btn-primary w-100">Analyse</button>
+        </div>
+    </form>
+</div>
+
+{% if analysed %}
+
+<!-- SPENDING CONTEXT BAR — minimal, just enough context -->
+<div class="card shadow-sm p-3 mb-4">
+    <div class="row g-3 text-center">
+        <div class="col-md-3">
+            <div class="small text-muted mb-1">Month</div>
+            <div class="fw-semibold">{{ month_name }} {{ selected_year }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-muted mb-1">Total Expenses</div>
+            <div class="fw-semibold text-danger">£{{ "%.2f"|format(summary_stats.total_expenses) }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-muted mb-1">Top Spending Category</div>
+            <div class="fw-semibold text-primary">{{ summary_stats.top_cat }} — £{{ "%.2f"|format(summary_stats.top_cat_amount) }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-muted mb-1">vs Last Month</div>
+            <div class="fw-semibold {% if summary_stats.mom_change and summary_stats.mom_change > 0 %}text-danger{% else %}text-success{% endif %}">
+                {% if summary_stats.mom_change is not none %}
+                    {% if summary_stats.mom_change > 0 %}+{% endif %}{{ summary_stats.mom_change }}% vs {{ summary_stats.prev_month_name }}
+                {% else %}
+                    No prior data
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TIPS -->
+{% if tips %}
+
+{% set danger_tips = tips | selectattr("severity", "eq", "danger") | list %}
+{% set warning_tips = tips | selectattr("severity", "eq", "warning") | list %}
+{% set success_tips = tips | selectattr("severity", "eq", "success") | list %}
+
+{% if danger_tips %}
+<div class="card shadow-sm p-4 mb-3">
+    <h5 class="mb-3 text-danger">Action Required</h5>
+    <div class="row g-3">
+        {% for tip in danger_tips %}
+        <div class="col-md-6">
+            <div class="p-3 rounded border-start border-4 border-danger h-100" style="background:#fff5f5;">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="fw-semibold">{{ tip.title }}</span>
+                    <span class="badge bg-danger ms-2">{{ tip.category }}</span>
+                </div>
+                <p class="text-muted small mb-0">{{ tip.message }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if warning_tips %}
+<div class="card shadow-sm p-4 mb-3">
+    <h5 class="mb-3 text-warning">Worth Reviewing</h5>
+    <div class="row g-3">
+        {% for tip in warning_tips %}
+        <div class="col-md-6">
+            <div class="p-3 rounded border-start border-4 border-warning h-100" style="background:#fffdf0;">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="fw-semibold">{{ tip.title }}</span>
+                    <span class="badge bg-warning text-dark ms-2">{{ tip.category }}</span>
+                </div>
+                <p class="text-muted small mb-0">{{ tip.message }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if success_tips %}
+<div class="card shadow-sm p-4 mb-3">
+    <h5 class="mb-3 text-success">Doing Well</h5>
+    <div class="row g-3">
+        {% for tip in success_tips %}
+        <div class="col-md-6">
+            <div class="p-3 rounded border-start border-4 border-success h-100" style="background:#f0fff4;">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="fw-semibold">{{ tip.title }}</span>
+                    <span class="badge bg-success ms-2">{{ tip.category }}</span>
+                </div>
+                <p class="text-muted small mb-0">{{ tip.message }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info">No feedback available for this period. Log transactions and set up your Budget Tracker to receive insights.</div>
+{% endif %}
+
+<p class="text-muted small mt-3 mb-0">
+    These insights are generated automatically based on your spending data and are for informational purposes only. They do not constitute financial advice.
+</p>
+
+{% else %}
+<div class="card shadow-sm p-5 text-center text-muted">
+    <h5>Select a month and click Analyse</h5>
+    <p class="small mb-0">Category-level spending tips will appear here once you run the analysis.</p>
+</div>
+{% endif %}
+
+{% endblock %}

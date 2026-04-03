@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-1">Financial Risk Indicator</h2>
+<p class="text-muted mb-4">A quantitative assessment of your financial stability scored out of 100 based on budget usage, savings, debt, and spending trends.</p>
+
+<!-- SELECTOR -->
+<div class="card shadow-sm p-3 mb-4">
+    <form method="GET" action="/risk" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Month</label>
+            <select name="month" class="form-select">
+                {% for m in month_options %}
+                <option value="{{ m.value }}" {% if selected_month == m.value %}selected{% endif %}>{{ m.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Year</label>
+            <select name="year" class="form-select">
+                {% for y in years %}
+                <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" name="analysed" value="true" class="btn btn-primary w-100">Analyse Risk</button>
+        </div>
+    </form>
+</div>
+
+{% if analysed %}
+
+<!-- RISK SCORE CARD -->
+<div class="card shadow-sm p-4 mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-4 text-center border-end">
+            <p class="text-muted small mb-1">{{ month_name }} {{ selected_year }}</p>
+            <div class="display-3 fw-bold text-{{ risk_data.risk_colour }}">{{ risk_data.score }}</div>
+            <div class="text-muted small mb-2">out of 100</div>
+            <span class="badge bg-{{ risk_data.risk_colour }} fs-6 px-3 py-2">{{ risk_data.risk_level }} Risk</span>
+            <p class="text-muted small mt-3 mb-0">{{ risk_data.risk_description }}</p>
+        </div>
+        <div class="col-md-8 ps-4">
+            <h6 class="fw-semibold mb-3">Risk Score Meter</h6>
+            <div class="mb-1 d-flex justify-content-between small text-muted">
+                <span>High Risk (0)</span>
+                <span>Medium Risk (50)</span>
+                <span>Low Risk (100)</span>
+            </div>
+            <div class="progress" style="height: 22px; border-radius: 10px; overflow:hidden;">
+                <div class="progress-bar bg-danger" style="width:50%;"></div>
+                <div class="progress-bar bg-warning" style="width:25%;"></div>
+                <div class="progress-bar bg-success" style="width:25%;"></div>
+            </div>
+            <div style="position:relative; height:18px; margin-top:2px;">
+                <div style="position:absolute; left:calc({{ risk_data.score }}% - 8px); top:2px;">
+                    <div style="width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:10px solid #333;"></div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between small text-muted">
+                <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+            </div>
+            <p class="text-muted small mt-3 mb-0">
+                Score is calculated from five weighted factors: budget usage (30 pts), savings rate (25 pts), debt ratio (20 pts), spending trend (15 pts), and bills burden (10 pts). A higher score indicates lower financial risk.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- FACTOR TABLE -->
+<div class="card shadow-sm p-4 mb-4">
+    <h5 class="mb-3">Risk Factor Breakdown</h5>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Factor</th>
+                    <th>Measured Value</th>
+                    <th>Risk Level</th>
+                    <th>Points Deducted</th>
+                    <th>Assessment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for factor in factors %}
+                <tr>
+                    <td class="fw-semibold">{{ factor.label }}</td>
+                    <td>{{ factor.value }}</td>
+                    <td>
+                        <span class="badge {% if factor.impact == 'high' %}bg-danger{% elif factor.impact == 'medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                            {% if factor.impact == 'high' %}High{% elif factor.impact == 'medium' %}Medium{% else %}Low{% endif %}
+                        </span>
+                    </td>
+                    <td class="{% if factor.deducted > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {% if factor.deducted > 0 %}-{{ factor.deducted }}{% else %}0{% endif %}
+                    </td>
+                    <td class="text-muted small">{{ factor.note }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- SCORE GUIDE -->
+<div class="card shadow-sm p-4 mb-3">
+    <h5 class="mb-3">Score Guide</h5>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="p-3 rounded border-start border-4 border-success h-100" style="background:#f0fff4;">
+                <div class="fw-semibold text-success mb-1">Low Risk — 75 to 100</div>
+                <p class="text-muted small mb-0">Financial indicators are stable. Spending is controlled, savings are healthy, and debt is manageable.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 rounded border-start border-4 border-warning h-100" style="background:#fffdf0;">
+                <div class="fw-semibold text-warning mb-1">Medium Risk — 50 to 74</div>
+                <p class="text-muted small mb-0">Some financial indicators need attention. Review spending patterns and consider increasing savings allocation.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 rounded border-start border-4 border-danger h-100" style="background:#fff5f5;">
+                <div class="fw-semibold text-danger mb-1">High Risk — 0 to 49</div>
+                <p class="text-muted small mb-0">Multiple financial indicators are concerning. Immediate reduction in spending and increase in savings is recommended.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="text-muted small mt-3 mb-0">
+    This risk assessment is generated automatically based on your financial data. It is for informational purposes only and does not constitute financial advice.
+</p>
+
+{% else %}
+<div class="card shadow-sm p-5 text-center text-muted">
+    <h5>Select a month and click Analyse Risk</h5>
+    <p class="small mb-0">Your financial risk score and factor breakdown will appear here once you run the analysis.</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -4,33 +4,66 @@
 <h2 class="mb-4">Dashboard</h2>
 
 <!-- ================= MONTHLY FINANCIAL ENGINE ================= -->
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card shadow-sm p-3">
-            <h6>Current Budget</h6>
-            <h3 class="{% if summary.current_budget < 0 %}text-danger{% else %}text-success{% endif %}">
-                £{{ summary.current_budget }}
+<div class="row g-3 mb-4">
+    <div class="col-md">
+        <div class="card shadow-sm p-3 h-100">
+            <h6>Starting Balance</h6>
+            <h3 class="{% if summary.account_balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                £{{ "%.2f"|format(summary.account_balance) }}
             </h3>
+            <small class="text-muted">As entered in Budget Tracker</small>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm p-3">
+    <div class="col-md">
+        <div class="card shadow-sm p-3 h-100">
+            <h6>End Balance</h6>
+            <h3 class="{% if summary.real_balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                £{{ "%.2f"|format(summary.real_balance) }}
+            </h3>
+            <small class="text-muted">Account + income - expenses - deductions</small>
+        </div>
+    </div>
+    <div class="col-md">
+        <div class="card shadow-sm p-3 h-100">
+            <h6>Net Salary</h6>
+            <h3 class="{% if summary.current_budget < 0 %}text-danger{% else %}text-success{% endif %}">
+                £{{ "%.2f"|format(summary.current_budget) }}
+            </h3>
+            <small class="text-muted">Salary - deductions ± spending log</small>
+        </div>
+    </div>
+    <div class="col-md">
+        <div class="card shadow-sm p-3 h-100">
             <h6>Projected End Balance</h6>
             <h3 class="{% if summary.projected_end_balance < 0 %}text-danger{% else %}text-success{% endif %}">
-                £{{ summary.projected_end_balance }}
+                £{{ "%.2f"|format(summary.projected_end_balance) }}
             </h3>
+            <small class="text-muted">Estimated balance at month end</small>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm p-3">
+    <div class="col-md">
+        <div class="card shadow-sm p-3 h-100">
             <h6>Daily Burn Rate</h6>
             <h3>£{{ summary.burn_rate }}</h3>
+            <small class="text-muted">Avg daily spend this month</small>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm p-3">
-            <h6>Budget Usage</h6>
-            <h3>{{ summary.budget_usage_pct }}%</h3>
+    <div class="col-md">
+        <div class="card shadow-sm p-3 h-100">
+            <h6>Budget Spent</h6>
+            <h3 class="{% if summary.spending_limit_remaining < 0 %}text-danger{% else %}text-warning{% endif %}">
+                {{ summary.budget_usage_pct }}%
+            </h3>
+            <small class="text-muted">£{{ "%.2f"|format(summary.expense_total) }} of £{{ "%.2f"|format(summary.spending_limit) }} limit</small>
+        </div>
+    </div>
+    <div class="col-md">
+        <div class="card shadow-sm p-3 h-100">
+            <h6>Limit Remaining</h6>
+            <h3 class="{% if summary.spending_limit_remaining < 0 %}text-danger{% else %}text-success{% endif %}">
+                £{{ "%.2f"|format(summary.spending_limit_remaining) }}
+            </h3>
+            <small class="text-muted">Left of £{{ "%.2f"|format(summary.spending_limit) }} spending limit</small>
         </div>
     </div>
 </div>
@@ -80,33 +113,42 @@
         <div class="d-flex justify-content-between align-items-start w-100 mb-2">
             <div>
                 {% set month_names = ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
-                <h5 class="mb-1">Spending Trend</h5>
-                <p class="text-muted small mb-0">
+                <h5 class="mb-1" id="chartMainTitle">Spending Trend</h5>
+                <p class="text-muted small mb-0" id="chartSubtitle">
                     {% if month_option %}{{ month_names[month_option|int - 1] }} total spend{% endif %}
                 </p>
             </div>
-            <div class="text-end">
+            <div class="text-end" id="chartTotalDisplay">
                 {% if compare == "true" and comparison_values %}
                     {% set current_total = values | sum %}
                     {% set prev_total = comparison_values | sum %}
                     {% set diff = current_total - prev_total %}
-                    <div class="fw-bold fs-5">£{{ "%.2f"|format(current_total) }}</div>
+                    <div class="fw-bold fs-5" id="chartTotalAmount">£{{ "%.2f"|format(current_total) }}</div>
                     {% if diff < 0 %}
-                    <div class="text-success small">⬇ £{{ "%.2f"|format(diff|abs) }} less spent vs previous period</div>
+                    <div class="text-success small" id="chartTotalLabel">⬇ £{{ "%.2f"|format(diff|abs) }} less spent vs previous period</div>
                     {% elif diff > 0 %}
-                    <div class="text-danger small">⬆ £{{ "%.2f"|format(diff) }} more spent vs previous period</div>
+                    <div class="text-danger small" id="chartTotalLabel">⬆ £{{ "%.2f"|format(diff) }} more spent vs previous period</div>
                     {% else %}
-                    <div class="text-muted small">Same as previous period</div>
+                    <div class="text-muted small" id="chartTotalLabel">Same as previous period</div>
                     {% endif %}
                     <div class="text-muted small">vs. previous period (£{{ "%.2f"|format(prev_total) }})</div>
                 {% else %}
-                    <div class="fw-bold fs-5">£{{ "%.2f"|format(values | sum) }}</div>
-                    <div class="text-muted small">Total spend this period</div>
+                    <div class="fw-bold fs-5" id="chartTotalAmount">£{{ "%.2f"|format(values | sum) }}</div>
+                    <div class="text-muted small" id="chartTotalLabel">Total spend this period</div>
                 {% endif %}
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <div id="monthlyControls" class="flex-wrap gap-2 align-items-center" style="display:flex;">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="chartTypeBtn" data-bs-toggle="dropdown">
+                        📊 Expenses
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="switchChartType('expenses'); return false;">📊 Expenses</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="switchChartType('income'); return false;">💰 Income</a></li>
+                    </ul>
+                </div>
                 <select id="rangeSelect" class="form-select form-select-sm w-auto">
                     <option value="7" {% if range_option=="7" %}selected{% endif %}>Last 7 Days</option>
                     <option value="30" {% if range_option=="30" %}selected{% endif %}>Last 30 Days</option>
@@ -132,7 +174,7 @@
     <div id="yearViewHeader" style="display:none;" class="mb-3">
         <div class="d-flex justify-content-between align-items-start w-100 mb-2">
             <div>
-                <h5 class="mb-1">Year Overview</h5>
+                <h5 class="mb-1" id="yearChartTitle">Year Overview</h5>
                 <p class="text-muted small mb-0" id="yearSubtitle">Last 12 months · Monthly avg: <strong>£{{ "%.2f"|format(year_monthly_avg) }}</strong></p>
                 <div class="d-flex gap-2 mt-2">
                     <button id="btn12Months" class="btn btn-sm btn-primary" onclick="switchYearView('12months')">Last 12 Months</button>
@@ -164,19 +206,79 @@
     <div id="incomeExpenseChart"></div>
 </div>
 
+<!-- ================= PLANNED DEDUCTIONS CHART ================= -->
+<div class="card shadow-sm p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h5 class="mb-1">Planned Deductions Breakdown</h5>
+            <p class="text-muted small mb-0" id="deductionsSubtitle">Last 6 months · Savings, Bills & Debt</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <button id="deductions6mBtn" class="btn btn-sm btn-primary" onclick="switchDeductionsView('6m')">Last 6 Months</button>
+            <button id="deductions12mBtn" class="btn btn-sm btn-outline-secondary" onclick="switchDeductionsView('12m')">Last 12 Months</button>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="deductionsYearBtn" data-bs-toggle="dropdown">
+                    By Year
+                </button>
+                <ul class="dropdown-menu">
+                    {% for yr in [2025, 2026, 2027] %}
+                    <li><a class="dropdown-item" href="#" onclick="switchDeductionsView('year', '{{ yr }}'); return false;">{{ yr }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="deductionsChart"></div>
+
+    <!-- SUMMARY SECTION -->
+    <div id="deductionsSummary" class="mt-4">
+        <hr>
+        <div class="row g-3">
+
+            <!-- SAVINGS BREAKDOWN -->
+            <div class="col-md-6">
+                <h6 class="fw-semibold mb-3">💰 Savings Breakdown</h6>
+                <div id="savingsSummaryItems"></div>
+            </div>
+
+            <!-- BILLS + DEBT TOTALS -->
+            <div class="col-md-6">
+                <h6 class="fw-semibold mb-3">📋 Bills & Debt Totals</h6>
+                <div class="d-flex justify-content-between align-items-center p-3 rounded mb-2" style="background:#f8f9fa;">
+                    <span class="fw-medium">Total Bills</span>
+                    <span class="fw-bold text-primary" id="summaryBillsTotal">£0.00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background:#f8f9fa;">
+                    <span class="fw-medium">Total Debt Payments</span>
+                    <span class="fw-bold text-danger" id="summaryDebtsTotal">£0.00</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
 <!-- ================= DATA ================= -->
 <script id="dashboard-chart-data" type="application/json">
 {{ {
     "labels": labels,
     "values": values,
+    "incomeValues": income_values,
     "comparisonValues": comparison_values,
+    "incomeComparisonValues": income_comparison_values,
     "compareEnabled": compare == "true",
     "yearLabels": year_labels,
     "yearExpenses": year_expenses,
+    "yearIncome": year_income,
     "yearMonthlyAvg": year_monthly_avg,
+    "yearIncomeMonthlyAvg": year_income_monthly_avg,
     "currentYearLabels": current_year_labels,
     "currentYearExpenses": current_year_expenses,
-    "currentYearAvg": current_year_avg
+    "currentYearIncome": current_year_income,
+    "currentYearAvg": current_year_avg,
+    "currentYearIncomeAvg": current_year_income_avg
 } | tojson }}
 </script>
 
@@ -188,19 +290,36 @@
 } | tojson }}
 </script>
 
+<script id="dashboard-deductions-data" type="application/json">
+{{ {
+    "deductions6m": deductions_6m,
+    "deductions12m": deductions_12m,
+    "deductionsByYear": deductions_by_year,
+    "summary6m": summary_6m,
+    "summary12m": summary_12m,
+    "summaryByYear": summary_by_year
+} | tojson }}
+</script>
+
 <!-- ================= CHARTS SCRIPT ================= -->
 <script>
     const chartData = JSON.parse(document.getElementById("dashboard-chart-data").textContent);
     const labels = chartData.labels;
     const values = chartData.values;
+    const incomeValues = chartData.incomeValues;
     const comparisonValues = chartData.comparisonValues;
+    const incomeComparisonValues = chartData.incomeComparisonValues;
     const compareEnabled = chartData.compareEnabled;
     const yearLabels = chartData.yearLabels;
     const yearExpenses = chartData.yearExpenses;
+    const yearIncome = chartData.yearIncome;
     const yearMonthlyAvg = chartData.yearMonthlyAvg;
+    const yearIncomeMonthlyAvg = chartData.yearIncomeMonthlyAvg;
     const currentYearLabels = chartData.currentYearLabels;
     const currentYearExpenses = chartData.currentYearExpenses;
+    const currentYearIncome = chartData.currentYearIncome;
     const currentYearAvg = chartData.currentYearAvg;
+    const currentYearIncomeAvg = chartData.currentYearIncomeAvg;
     const now = new Date();
 
     const formattedLabels = labels.map(d => {
@@ -208,12 +327,22 @@
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
     });
 
-    const seriesData = compareEnabled && comparisonValues.length > 0
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentChartType = urlParams.get("chart_type") || 'expenses';
+
+    const expenseSeriesData = compareEnabled && comparisonValues.length > 0
         ? [
             { name: "Current Period", data: values },
             { name: "Previous Period", data: comparisonValues }
           ]
         : [{ name: "Current Period", data: values }];
+
+    const incomeSeriesData = compareEnabled && incomeComparisonValues.length > 0
+        ? [
+            { name: "Current Period", data: incomeValues },
+            { name: "Previous Period", data: incomeComparisonValues }
+          ]
+        : [{ name: "Current Period", data: incomeValues }];
 
     // ---- MONTHLY AREA CHART ----
     var spendingChart = new ApexCharts(document.querySelector("#spendingChart"), {
@@ -227,7 +356,7 @@
                 tools: { zoom: true, zoomin: true, zoomout: true, pan: true, reset: true, download: true }
             }
         },
-        series: seriesData,
+        series: expenseSeriesData,
         xaxis: {
             categories: formattedLabels,
             title: { text: "Date" },
@@ -253,9 +382,94 @@
     });
     spendingChart.render();
 
+    if (currentChartType === 'income') {
+        switchChartType('income');
+    }
+
     document.getElementById("chartWrapper").addEventListener("wheel", e => {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
     }, { passive: false, capture: true });
+
+    // ---- SWITCH CHART TYPE (EXPENSES / INCOME) ----
+    function switchChartType(type) {
+        currentChartType = type;
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set("chart_type", type);
+        history.replaceState(null, '', '?' + urlParams.toString());
+        const isIncome = type === 'income';
+
+        const newSeries = isIncome ? incomeSeriesData : expenseSeriesData;
+        const newData = isIncome ? incomeValues : values;
+        const newColors = isIncome
+            ? (compareEnabled ? ['#1cc88a', '#a78bfa'] : ['#1cc88a'])
+            : (compareEnabled ? ['#3b82f6', '#f97316'] : ['#3b82f6']);
+
+        spendingChart.updateOptions({
+            colors: newColors,
+            yaxis: {
+                min: 0,
+                max: newData.every(v => v === 0) ? 10 : undefined,
+                title: { text: "Amount (£)" },
+                labels: { formatter: val => "£" + val.toFixed(2) }
+            }
+        });
+        spendingChart.updateSeries(newSeries);
+
+        const total = newData.reduce((a, b) => a + b, 0);
+        document.getElementById("chartMainTitle").textContent = isIncome ? "Income Trend" : "Spending Trend";
+        document.getElementById("chartTotalAmount").textContent = `£${total.toFixed(2)}`;
+        document.getElementById("chartTotalLabel").textContent = isIncome ? "Total income this period" : "Total spend this period";
+        document.getElementById("chartTypeBtn").innerHTML = isIncome ? "💰 Income" : "📊 Expenses";
+
+        if (isYearView) {
+            const currentMode = document.getElementById("btnCurrentYear").className.includes("btn-primary") ? 'currentyear' : '12months';
+            updateYearChartForType(type, currentMode);
+        }
+    }
+
+    // ---- UPDATE YEAR CHART FOR CURRENT TYPE ----
+    function updateYearChartForType(type, mode) {
+        const isIncome = type === 'income';
+        const isCurrentYear = mode
+            ? mode === 'currentyear'
+            : document.getElementById("btnCurrentYear").className.includes("btn-primary");
+
+        const data = isCurrentYear
+            ? (isIncome ? currentYearIncome : currentYearExpenses)
+            : (isIncome ? yearIncome : yearExpenses);
+        const labs = isCurrentYear ? currentYearLabels : yearLabels;
+        const avg = isCurrentYear
+            ? (isIncome ? currentYearIncomeAvg : currentYearAvg)
+            : (isIncome ? yearIncomeMonthlyAvg : yearMonthlyAvg);
+        const color = isIncome ? '#1cc88a' : '#a78bfa';
+        const seriesName = isIncome ? 'Income' : 'Expenses';
+
+        activeYearLabels = labs;
+        activeYearAvg = avg;
+
+        yearChart.updateOptions({
+            colors: [color],
+            xaxis: { categories: labs },
+            annotations: {
+                yaxis: [{
+                    y: avg,
+                    borderColor: '#f97316',
+                    strokeDashArray: 6,
+                    borderWidth: 2,
+                    label: {
+                        text: `Avg: £${avg.toFixed(2)}`,
+                        style: { color: '#fff', background: '#f97316', fontSize: '11px' },
+                        position: 'right', offsetX: -10
+                    }
+                }]
+            }
+        });
+        yearChart.updateSeries([{ name: seriesName, data: data }]);
+
+        document.getElementById("yearChartTitle").textContent = isIncome ? "Year Overview — Income" : "Year Overview";
+        const periodLabel = isCurrentYear ? `${now.getFullYear()} · ` : 'Last 12 months · ';
+        document.getElementById("yearSubtitle").innerHTML = `${periodLabel}Monthly avg: <strong>£${avg.toFixed(2)}</strong>`;
+    }
 
     let activeYearLabels = yearLabels;
     let activeYearAvg = yearMonthlyAvg;
@@ -303,9 +517,10 @@
                 const diffText = diff >= 0
                     ? `<span style="color:#e74a3b">+£${diff.toFixed(2)} vs avg</span>`
                     : `<span style="color:#1cc88a">-£${Math.abs(diff).toFixed(2)} vs avg</span>`;
+                const label = currentChartType === 'income' ? 'Income' : 'Spent';
                 return `<div style="padding:10px 14px; font-size:13px;">
                     <div style="font-weight:600; margin-bottom:4px;">${month}</div>
-                    <div>Spent: <strong>£${val.toFixed(2)}</strong></div>
+                    <div>${label}: <strong>£${val.toFixed(2)}</strong></div>
                     <div>${diffText}</div>
                 </div>`;
             }
@@ -317,52 +532,13 @@
     // ---- YEAR VIEW SWITCHER ----
     function switchYearView(mode) {
         if (mode === 'currentyear') {
-            activeYearLabels = currentYearLabels;
-            activeYearAvg = currentYearAvg;
-            yearChart.updateOptions({
-                xaxis: { categories: currentYearLabels },
-                annotations: {
-                    yaxis: [{
-                        y: currentYearAvg,
-                        borderColor: '#f97316',
-                        strokeDashArray: 6,
-                        borderWidth: 2,
-                        label: {
-                            text: `Avg: £${currentYearAvg.toFixed(2)}`,
-                            style: { color: '#fff', background: '#f97316', fontSize: '11px' },
-                            position: 'right', offsetX: -10
-                        }
-                    }]
-                }
-            });
-            yearChart.updateSeries([{ name: 'Expenses', data: currentYearExpenses }]);
-            document.getElementById("yearSubtitle").innerHTML = `${now.getFullYear()} · Monthly avg: <strong>£${currentYearAvg.toFixed(2)}</strong>`;
             document.getElementById("btn12Months").className = "btn btn-sm btn-outline-secondary";
             document.getElementById("btnCurrentYear").className = "btn btn-sm btn-primary";
         } else {
-            activeYearLabels = yearLabels;
-            activeYearAvg = yearMonthlyAvg;
-            yearChart.updateOptions({
-                xaxis: { categories: yearLabels },
-                annotations: {
-                    yaxis: [{
-                        y: yearMonthlyAvg,
-                        borderColor: '#f97316',
-                        strokeDashArray: 6,
-                        borderWidth: 2,
-                        label: {
-                            text: `Avg: £${yearMonthlyAvg.toFixed(2)}`,
-                            style: { color: '#fff', background: '#f97316', fontSize: '11px' },
-                            position: 'right', offsetX: -10
-                        }
-                    }]
-                }
-            });
-            yearChart.updateSeries([{ name: 'Expenses', data: yearExpenses }]);
-            document.getElementById("yearSubtitle").innerHTML = `Last 12 months · Monthly avg: <strong>£${yearMonthlyAvg.toFixed(2)}</strong>`;
             document.getElementById("btn12Months").className = "btn btn-sm btn-primary";
             document.getElementById("btnCurrentYear").className = "btn btn-sm btn-outline-secondary";
         }
+        updateYearChartForType(currentChartType, mode);
     }
 
     // ---- TOGGLE BETWEEN MONTHLY AND YEAR OVERVIEW ----
@@ -374,7 +550,10 @@
         document.getElementById("yearChartWrapper").style.display = "block";
         document.getElementById("monthlyViewHeader").style.display = "none";
         document.getElementById("yearViewHeader").style.display = "block";
-        document.getElementById("yearToggleBtn").textContent = "📅 Year Overview";
+        const currentMode = document.getElementById("btnCurrentYear").className.includes("btn-primary") ? 'currentyear' : '12months';
+        setTimeout(() => {
+            updateYearChartForType(currentChartType, currentMode);
+        }, 100);
     }
 
     function exitYearView() {
@@ -438,6 +617,121 @@
     barChart.render();
 </script>
 
+
+<!-- ================= PLANNED DEDUCTIONS SCRIPT ================= -->
+<script>
+    const deductionsData = JSON.parse(document.getElementById("dashboard-deductions-data").textContent);
+
+    function buildDeductionsSeries(data) {
+        return [
+            { name: 'Savings', data: data.map(d => d.savings) },
+            { name: 'Bills', data: data.map(d => d.bills) },
+            { name: 'Debts', data: data.map(d => d.debts) }
+        ];
+    }
+
+    function buildDeductionsLabels(data) {
+        return data.map(d => d.label);
+    }
+
+    var deductionsChart = new ApexCharts(document.querySelector("#deductionsChart"), {
+        chart: {
+            type: 'bar',
+            height: 350,
+            stacked: true,
+            toolbar: { show: false },
+            animations: { enabled: true, easing: 'easeinout', speed: 600 }
+        },
+        series: buildDeductionsSeries(deductionsData.deductions6m),
+        xaxis: {
+            categories: buildDeductionsLabels(deductionsData.deductions6m),
+            title: { text: "Month" }
+        },
+        yaxis: {
+            min: 0,
+            title: { text: "Amount (£)" },
+            labels: { formatter: val => "£" + val.toFixed(2) }
+        },
+        colors: ['#1cc88a', '#3b82f6', '#e74a3b'],
+        plotOptions: {
+            bar: { borderRadius: 4, columnWidth: '55%' }
+        },
+        dataLabels: { enabled: false },
+        legend: { position: 'top' },
+        tooltip: {
+            y: { formatter: val => "£" + val.toFixed(2) }
+        },
+        grid: { borderColor: '#e0e0e0', strokeDashArray: 4 }
+    });
+    deductionsChart.render();
+
+    function renderSummary(summary) {
+        const savingsContainer = document.getElementById("savingsSummaryItems");
+        savingsContainer.innerHTML = "";
+
+        const savings = summary.savings;
+        if (Object.keys(savings).length === 0) {
+            savingsContainer.innerHTML = '<p class="text-muted small">No savings data for this period.</p>';
+        } else {
+            Object.entries(savings).forEach(([key, val]) => {
+                const item = document.createElement("div");
+                item.className = "d-flex justify-content-between align-items-center p-3 rounded mb-2";
+                item.style.background = "#f8f9fa";
+                item.innerHTML = `
+                    <span class="fw-medium">${key}</span>
+                    <span class="fw-bold text-success">£${val.toFixed(2)}</span>
+                `;
+                savingsContainer.appendChild(item);
+            });
+        }
+
+        document.getElementById("summaryBillsTotal").textContent = `£${summary.bills_total.toFixed(2)}`;
+        document.getElementById("summaryDebtsTotal").textContent = `£${summary.debts_total.toFixed(2)}`;
+    }
+
+    function switchDeductionsView(mode, year) {
+        let data;
+        let summary;
+        let subtitle;
+
+        if (mode === '6m') {
+            data = deductionsData.deductions6m;
+            summary = deductionsData.summary6m;
+            subtitle = 'Last 6 months · Savings, Bills & Debt';
+            document.getElementById("deductions6mBtn").className = "btn btn-sm btn-primary";
+            document.getElementById("deductions12mBtn").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("deductionsYearBtn").textContent = "By Year";
+        } else if (mode === '12m') {
+            data = deductionsData.deductions12m;
+            summary = deductionsData.summary12m;
+            subtitle = 'Last 12 months · Savings, Bills & Debt';
+            document.getElementById("deductions6mBtn").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("deductions12mBtn").className = "btn btn-sm btn-primary";
+            document.getElementById("deductionsYearBtn").textContent = "By Year";
+        } else if (mode === 'year') {
+            data = deductionsData.deductionsByYear[year];
+            summary = deductionsData.summaryByYear[year];
+            subtitle = `${year} · Savings, Bills & Debt`;
+            document.getElementById("deductions6mBtn").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("deductions12mBtn").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("deductionsYearBtn").textContent = year;
+        }
+
+        deductionsChart.updateOptions({
+            xaxis: { categories: buildDeductionsLabels(data) }
+        });
+        deductionsChart.updateSeries(buildDeductionsSeries(data));
+        document.getElementById("deductionsSubtitle").textContent = subtitle;
+        renderSummary(summary);
+    }
+
+    // Render initial summary on page load
+    renderSummary(deductionsData.summary6m);
+</script>
+
+
+
+
 <!-- ================= FILTER HANDLING ================= -->
 <script>
     document.getElementById("rangeSelect").addEventListener("change", updateDashboard);
@@ -453,7 +747,7 @@
     function updateDashboard() {
         const range = document.getElementById("rangeSelect").value;
         const month = document.getElementById("monthSelect").value;
-        let params = new URLSearchParams();
+        let params = new URLSearchParams(window.location.search);
         params.set("range", range);
         if (month) params.set("month", month);
         window.location.search = params.toString();
