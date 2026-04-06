@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-1">Prediction</h2>
+<p class="text-muted mb-4">Machine learning powered spending predictions based on your financial history.</p>
+
+<!-- FEATURE SELECTOR -->
+<div class="card shadow-sm p-4 mb-4">
+    <h5 class="mb-3">Available Prediction Features</h5>
+    <div class="row g-3 align-items-end mb-3">
+        <div class="col-md-5">
+            <label class="form-label">Select a Prediction Feature</label>
+            <select id="featureSelector" class="form-select" onchange="switchFeature(this.value)">
+                <option value="" disabled {% if not active_feature %}selected{% endif %}>-- Select a feature --</option>
+                <option value="forecast" {% if active_feature == 'forecast' %}selected{% endif %}>Spending Forecast & Budget Prediction</option>
+                <option value="category" disabled>Top Category Prediction (Coming Soon)</option>
+                <option value="balance" disabled>End of Month Balance (Coming Soon)</option>
+                <option value="clustering" disabled>Spending Behaviour Clustering (Coming Soon)</option>
+            </select>
+        </div>
+    </div>
+    <ul class="text-muted small mb-0">
+        <li><strong>Spending Forecast & Budget Prediction</strong> — Predicts your daily spending pattern for the next 30 days and whether you will exceed your spending limit, using a Random Forest Regressor trained on the BudgetWise synthetic dataset (Arfath R, 2024)</li>
+        <li><strong>Top Category Prediction</strong> — Predicts which spending category will be highest next month</li>
+        <li><strong>End of Month Balance</strong> — Predicts your account balance at end of next month</li>
+        <li><strong>Spending Behaviour Clustering</strong> — Classifies your spending behaviour type using K-Means clustering</li>
+    </ul>
+</div>
+
+<!-- PLACEHOLDER -->
+<div id="placeholderCard" class="card shadow-sm p-5 text-center text-muted {% if active_feature %}d-none{% endif %}">
+    <h5>Select a prediction feature to get started</h5>
+    <p class="small mb-0">Choose from the dropdown above to run a machine learning prediction on your spending data.</p>
+</div>
+
+<!-- SPENDING FORECAST FEATURE -->
+<div id="forecastSection" class="{% if active_feature != 'forecast' %}d-none{% endif %}">
+    <div class="card shadow-sm p-4 mb-4">
+        <h5 class="mb-1">Spending Forecast & Budget Prediction</h5>
+        <p class="text-muted small mb-3">
+            Select a prediction scope to control how many past months are used to learn your
+            spending pattern. The Random Forest model predicts your spending change ratio, which
+            is then applied to your historical base to forecast the next 30 days.
+        </p>
+
+        <form method="GET" action="/insights" class="row g-3 align-items-end mb-4">
+            <input type="hidden" name="feature" value="forecast">
+            <div class="col-md-5">
+                <label class="form-label">Prediction Scope</label>
+                <select name="scope" class="form-select">
+                    <option value="1" {% if forecast_scope == 1 %}selected{% endif %}>Based on Last 1 Month</option>
+                    <option value="2" {% if forecast_scope == 2 %}selected{% endif %}>Based on Last 2 Months</option>
+                    <option value="3" {% if forecast_scope == 3 %}selected{% endif %}>Based on Last 3 Months</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" name="forecast_analysed" value="true" class="btn btn-primary w-100">Run Prediction</button>
+            </div>
+        </form>
+
+        {% if forecast_analysed %}
+
+        {% if prediction_data.history_warning %}
+        <div class="alert alert-warning mb-3">
+            ⚠ {{ prediction_data.history_warning }}
+        </div>
+        {% endif %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm p-3 h-100">
+                    <h6>Predicted Total</h6>
+                    <h3 class="{% if prediction_data.will_exceed %}text-danger{% else %}text-primary{% endif %}">
+                        £{{ "%.2f"|format(prediction_data.predicted_total) }}
+                    </h3>
+                    <small class="text-muted">Next 30 days from today</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm p-3 h-100">
+                    <h6>Spending Limit</h6>
+                    <h3>{% if prediction_data.spending_limit > 0 %}£{{ "%.2f"|format(prediction_data.spending_limit) }}{% else %}Not Set{% endif %}</h3>
+                    <small class="text-muted">This month's limit</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm p-3 h-100">
+                    <h6>Budget Prediction</h6>
+                    <h3 class="{% if prediction_data.will_exceed %}text-danger{% else %}text-success{% endif %}">
+                        {% if prediction_data.will_exceed %}At Risk{% else %}Within Limit{% endif %}
+                    </h3>
+                    <small class="text-muted">
+                        {% if prediction_data.spending_limit > 0 %}
+                            {{ prediction_data.spending_limit_pct }}% of limit
+                        {% else %}
+                            No limit set
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm p-3 h-100">
+                    <h6>Predicted Ratio</h6>
+                    <h3>x{{ prediction_data.predicted_ratio }}</h3>
+                    <small class="text-muted">
+                        {% if prediction_data.predicted_ratio > 1.0 %}
+                            Spending predicted to increase
+                        {% elif prediction_data.predicted_ratio < 1.0 %}
+                            Spending predicted to decrease
+                        {% else %}
+                            Spending predicted to stay similar
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert {% if prediction_data.will_exceed %}alert-danger{% else %}alert-success{% endif %} mb-4">
+            {% if prediction_data.will_exceed %}
+                Based on your spending pattern over the last {{ prediction_data.scope }} month{% if prediction_data.scope > 1 %}s{% endif %},
+                you are <strong>likely to exceed</strong> your spending limit of
+                £{{ "%.2f"|format(prediction_data.spending_limit) }} over the next 30 days (to {{ prediction_data.end_date_label }}).
+                Predicted total: <strong>£{{ "%.2f"|format(prediction_data.predicted_total) }}</strong>
+                ({{ prediction_data.spending_limit_pct }}% of your limit).
+            {% else %}
+                Based on your spending pattern over the last {{ prediction_data.scope }} month{% if prediction_data.scope > 1 %}s{% endif %},
+                you are <strong>unlikely to exceed</strong> your spending limit over the next 30 days (to {{ prediction_data.end_date_label }}).
+                Predicted total: <strong>£{{ "%.2f"|format(prediction_data.predicted_total) }}</strong>.
+            {% endif %}
+        </div>
+
+        <div id="forecastChart"></div>
+
+        <div class="card shadow-sm p-3 mt-4">
+            <h6 class="mb-3">Model Information</h6>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="text-muted small">Algorithm</td>
+                            <td class="fw-semibold small">Random Forest Regressor</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Training Dataset</td>
+                            <td class="fw-semibold small">BudgetWise Synthetic Finance Dataset (Arfath R, 2024) — 15,900 transactions, 150 users</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Training Records</td>
+                            <td class="fw-semibold small">965 user-month records (time-based split)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Test R²</td>
+                            <td class="fw-semibold small">{{ prediction_data.test_r2 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">CV R² (5-fold TimeSeriesSplit)</td>
+                            <td class="fw-semibold small text-success">{{ prediction_data.cv_r2 }} (±0.0659)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">CV MAE</td>
+                            <td class="fw-semibold small">{{ prediction_data.cv_mae }} ratio units</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">History Depth</td>
+                            <td class="fw-semibold small">
+                                {{ prediction_data.months_available }} month{% if prediction_data.months_available != 1 %}s{% endif %} available
+                                {% if prediction_data.months_available < 3 %}
+                                <span class="badge bg-warning text-dark ms-1">Limited</span>
+                                {% else %}
+                                <span class="badge bg-success ms-1">Good</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <p class="text-muted small mt-3 mb-0">
+            Predictions are generated by a Random Forest model trained on synthetic data.
+            They are estimations only and do not constitute financial advice.
+        </p>
+
+        {% endif %}
+    </div>
+</div>
+
+{% if forecast_analysed %}
+<script id="forecast-data" type="application/json">
+{{ {
+    "actualLabels": prediction_data.actual_labels,
+    "actualValues": prediction_data.actual_values,
+    "predictedLabels": prediction_data.predicted_labels,
+    "predictedValues": prediction_data.predicted_values
+} | tojson }}
+</script>
+
+<script>
+    const forecastRaw = JSON.parse(document.getElementById("forecast-data").textContent);
+
+    const formatLabel = d => {
+        const date = new Date(d + "T00:00:00");
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    };
+
+    const allLabels = [...forecastRaw.actualLabels, ...forecastRaw.predictedLabels];
+    const categories = allLabels.map(formatLabel);
+
+    const lastActual = forecastRaw.actualValues[forecastRaw.actualValues.length - 1];
+    const actualFull = [
+        ...forecastRaw.actualValues,
+        ...new Array(forecastRaw.predictedLabels.length).fill(null)
+    ];
+    const predictedFull = [
+        ...new Array(forecastRaw.actualValues.length - 1).fill(null),
+        lastActual,
+        ...forecastRaw.predictedValues
+    ];
+
+    const series = [
+        { name: "Actual (this month)", data: actualFull },
+        { name: "Predicted (next 30 days)", data: predictedFull }
+    ];
+
+    var forecastChart = new ApexCharts(document.querySelector("#forecastChart"), {
+        chart: {
+            type: 'line',
+            height: 380,
+            toolbar: { show: false },
+            animations: { enabled: true, easing: 'easeinout', speed: 600 }
+        },
+        series: series,
+        xaxis: {
+            categories: categories,
+            title: { text: "Date" },
+            labels: { rotate: -35, style: { fontSize: '11px' } },
+            tickAmount: Math.min(categories.length, 20)
+        },
+        yaxis: {
+            min: 0,
+            title: { text: "Amount (£)" },
+            labels: { formatter: val => val !== null ? "£" + val.toFixed(2) : "" }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: [3, 2],
+            dashArray: [0, 5]
+        },
+        colors: ['#3b82f6', '#f97316'],
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.3,
+                opacityTo: 0.05,
+                stops: [0, 100]
+            }
+        },
+        markers: { size: 4, hover: { size: 7 } },
+        legend: { position: 'top' },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: { formatter: val => val !== null ? "£" + val.toFixed(2) : "No data" }
+        },
+        grid: { borderColor: '#e0e0e0', strokeDashArray: 4 },
+        dataLabels: { enabled: false }
+    });
+    forecastChart.render();
+</script>
+{% endif %}
+
+<script>
+    function switchFeature(value) {
+        document.getElementById("placeholderCard").classList.add("d-none");
+        document.getElementById("forecastSection").classList.add("d-none");
+
+        if (value === "forecast") {
+            document.getElementById("forecastSection").classList.remove("d-none");
+        } else {
+            document.getElementById("placeholderCard").classList.remove("d-none");
+        }
+    }
+
+    window.addEventListener("DOMContentLoaded", function() {
+        const selector = document.getElementById("featureSelector");
+        if (selector.value) {
+            switchFeature(selector.value);
+        }
+    });
+</script>
+
+{% endblock %}
