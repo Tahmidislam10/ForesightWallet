@@ -12,6 +12,11 @@ from routes.budget import budget_bp
 from routes.feedback import feedback_bp
 from routes.risk import risk_bp
 from routes.prediction import prediction_bp
+from routes.spending_trends import spending_trends_bp
+from routes.income_trends import income_trends_bp
+from routes.planned_deductions import planned_deductions_bp
+from routes.category_prediction import category_bp
+from routes.clustering import clustering_bp
 
 load_dotenv()
 
@@ -27,6 +32,11 @@ app.register_blueprint(budget_bp)
 app.register_blueprint(feedback_bp)
 app.register_blueprint(risk_bp)
 app.register_blueprint(prediction_bp)
+app.register_blueprint(spending_trends_bp)
+app.register_blueprint(income_trends_bp)
+app.register_blueprint(planned_deductions_bp)
+app.register_blueprint(category_bp)
+app.register_blueprint(clustering_bp)
 
 @app.context_processor
 def inject_user():

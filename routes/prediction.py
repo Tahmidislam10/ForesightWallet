@@ -279,4 +279,7 @@ def insights():
         prediction_data=prediction_data,
         forecast_analysed=forecast_analysed,
         forecast_scope=forecast_scope,
+        category_data={},
+        category_analysed=False,
+        category_scope=1,
     )

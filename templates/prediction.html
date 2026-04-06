@@ -13,9 +13,9 @@
             <select id="featureSelector" class="form-select" onchange="switchFeature(this.value)">
                 <option value="" disabled {% if not active_feature %}selected{% endif %}>-- Select a feature --</option>
                 <option value="forecast" {% if active_feature == 'forecast' %}selected{% endif %}>Spending Forecast & Budget Prediction</option>
-                <option value="category" disabled>Top Category Prediction (Coming Soon)</option>
+                <option value="category" {% if active_feature == 'category' %}selected{% endif %}>Top Category Prediction</option>
                 <option value="balance" disabled>End of Month Balance (Coming Soon)</option>
-                <option value="clustering" disabled>Spending Behaviour Clustering (Coming Soon)</option>
+                <option value="clustering" {% if active_feature == 'clustering' %}selected{% endif %}>Spending Behaviour Clustering</option>
             </select>
         </div>
     </div>
@@ -185,6 +185,192 @@
     </div>
 </div>
 
+<!-- TOP CATEGORY PREDICTION SECTION -->
+<div id="categorySection" class="{% if active_feature != 'category' %}d-none{% endif %}">
+    <div class="card shadow-sm p-4 mb-4">
+        <h5 class="mb-1">Top Category Prediction</h5>
+        <p class="text-muted small mb-3">
+            Predicts your top 3 spending categories for the next 30 days based on your
+            historical category breakdown. Uses a weighted average of category percentages
+            across your selected scope months, scaled to the predicted total.
+        </p>
+
+        <form method="GET" action="/insights/category" class="row g-3 align-items-end mb-4">
+            <input type="hidden" name="feature" value="category">
+            <div class="col-md-3">
+                <label class="form-label">Prediction Scope</label>
+                <select name="scope" class="form-select">
+                    <option value="1" {% if category_scope == 1 %}selected{% endif %}>Based on Last 1 Month</option>
+                    <option value="2" {% if category_scope == 2 %}selected{% endif %}>Based on Last 2 Months</option>
+                    <option value="3" {% if category_scope == 3 %}selected{% endif %}>Based on Last 3 Months</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <button type="submit" name="analysed" value="true" class="btn btn-primary w-100">Predict Categories</button>
+            </div>
+        </form>
+
+        {% if category_analysed %}
+
+        {% if category_data.history_warning %}
+        <div class="alert alert-warning mb-3">
+            ⚠ {{ category_data.history_warning }}
+        </div>
+        {% endif %}
+
+        {% if category_data.top_categories %}
+        <div class="row g-3 mb-4">
+            {% for cat in category_data.top_categories %}
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">{{ cat.category }}</h6>
+                        <span class="badge bg-primary">{{ cat.predicted_pct }}%</span>
+                    </div>
+                    <h3 class="text-primary mb-1">£{{ "%.2f"|format(cat.predicted_amount) }}</h3>
+                    <small class="text-muted">Predicted spend next 30 days</small>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar" style="width: {{ cat.predicted_pct }}%"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="alert alert-info mb-0">
+            Based on your spending pattern over the last {{ category_data.scope }} month{% if category_data.scope > 1 %}s{% endif %},
+            your top predicted category is <strong>{{ category_data.top_categories[0].category }}</strong>
+            at <strong>{{ category_data.top_categories[0].predicted_pct }}%</strong> of your total spend
+            (approx. <strong>£{{ "%.2f"|format(category_data.top_categories[0].predicted_amount) }}</strong>).
+        </div>
+        {% else %}
+        <div class="alert alert-warning">No category data found for the selected scope months.</div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+</div>
+
+
+<!-- SPENDING BEHAVIOUR CLUSTERING SECTION -->
+<div id="clusteringSection" class="{% if active_feature != 'clustering' %}d-none{% endif %}">
+    <div class="card shadow-sm p-4 mb-4">
+        <h5 class="mb-1">Spending Behaviour Clustering</h5>
+        <p class="text-muted small mb-3">
+            Uses K-Means clustering trained on the BudgetWise dataset (150 users) to classify
+            your spending behaviour into one of three profiles: Saver, Balanced, or Leisure-Heavy.
+            Your category breakdown is compared against learned cluster centres to find your nearest match.
+        </p>
+
+        <form method="GET" action="/insights/clustering" class="row g-3 align-items-end mb-4">
+            <div class="col-md-5">
+                <label class="form-label">Prediction Scope</label>
+                <select name="scope" class="form-select">
+                    <option value="1" {% if clustering_scope == 1 %}selected{% endif %}>Based on Last 1 Month</option>
+                    <option value="2" {% if clustering_scope == 2 %}selected{% endif %}>Based on Last 2 Months</option>
+                    <option value="3" {% if clustering_scope == 3 %}selected{% endif %}>Based on Last 3 Months</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" name="analysed" value="true" class="btn btn-primary w-100">Classify My Spending</button>
+            </div>
+        </form>
+
+        {% if clustering_analysed %}
+
+        {% if clustering_data.history_warning %}
+        <div class="alert alert-warning mb-3">
+            ⚠ {{ clustering_data.history_warning }}
+        </div>
+        {% endif %}
+
+        {% if clustering_data.cluster_label %}
+
+        <!-- CLUSTER RESULT -->
+        <div class="card shadow-sm p-4 mb-4 border-0" style="background: #f8f9fa;">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <span style="font-size: 2.5rem;">{{ clustering_data.icon }}</span>
+                <div>
+                    <h3 class="mb-0">
+                        <span class="badge {{ clustering_data.badge }} fs-5">{{ clustering_data.cluster_label }}</span>
+                    </h3>
+                    <small class="text-muted">Based on last {{ clustering_data.scope }} month{% if clustering_data.scope > 1 %}s{% endif %} of spending</small>
+                </div>
+            </div>
+            <p class="mb-0">{{ clustering_data.description }}</p>
+        </div>
+
+        <!-- METRICS ROW -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 h-100">
+                    <h6>Expense Ratio</h6>
+                    <h3 class="{% if clustering_data.expense_ratio > 90 %}text-danger{% elif clustering_data.expense_ratio > 70 %}text-warning{% else %}text-success{% endif %}">
+                        {{ clustering_data.expense_ratio }}%
+                    </h3>
+                    <small class="text-muted">Of income spent on expenses</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 h-100">
+                    <h6>Savings Rate</h6>
+                    <h3 class="{% if clustering_data.savings_pct < 10 %}text-danger{% elif clustering_data.savings_pct < 20 %}text-warning{% else %}text-success{% endif %}">
+                        {{ clustering_data.savings_pct }}%
+                    </h3>
+                    <small class="text-muted">Estimated savings from income</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 h-100">
+                    <h6>Top Category</h6>
+                    <h3 class="text-primary">
+                        {% if clustering_data.category_breakdown %}
+                            {{ clustering_data.category_breakdown[0].category }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </h3>
+                    <small class="text-muted">
+                        {% if clustering_data.category_breakdown %}
+                            {{ clustering_data.category_breakdown[0].pct }}% of spend
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORY BREAKDOWN -->
+        <div class="card shadow-sm p-3 mb-4">
+            <h6 class="mb-3">Your Spending Profile Breakdown</h6>
+            {% for cat in clustering_data.category_breakdown %}
+            <div class="mb-2">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="fw-medium">{{ cat.category }}</small>
+                    <small class="text-muted">{{ cat.pct }}%</small>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" style="width: {{ cat.pct }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- TIPS -->
+        <div class="card shadow-sm p-3">
+            <h6 class="mb-3">💡 Personalised Tips</h6>
+            <ul class="mb-0">
+                {% for tip in clustering_data.tips %}
+                <li class="mb-1 small">{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
 {% if forecast_analysed %}
 <script id="forecast-data" type="application/json">
 {{ {
@@ -274,9 +460,15 @@
     function switchFeature(value) {
         document.getElementById("placeholderCard").classList.add("d-none");
         document.getElementById("forecastSection").classList.add("d-none");
+        document.getElementById("categorySection").classList.add("d-none");
+        document.getElementById("clusteringSection").classList.add("d-none");
 
         if (value === "forecast") {
             document.getElementById("forecastSection").classList.remove("d-none");
+        } else if (value === "category") {
+            document.getElementById("categorySection").classList.remove("d-none");
+        } else if (value === "clustering") {
+            document.getElementById("clusteringSection").classList.remove("d-none");
         } else {
             document.getElementById("placeholderCard").classList.remove("d-none");
         }

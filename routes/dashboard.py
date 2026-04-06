@@ -2,10 +2,57 @@ from flask import Blueprint, render_template, request, redirect, session
 from datetime import datetime, timedelta
 from collections import defaultdict
 from extensions import spending_collection, budget_collection
-from helpers import calculate_month_summary, get_planned_deductions_history, get_deductions_summary, normalize_section
+from helpers import calculate_month_summary, normalize_section
 import calendar
 
 dashboard_bp = Blueprint("dashboard", __name__)
+
+CATEGORY_ICONS = {
+    "Food": "🍔",
+    "Transport": "🚗",
+    "Shopping": "🛍️",
+    "Entertainment": "🎬",
+    "Health": "💊",
+    "Education": "📚",
+    "Bills": "📄",
+    "Investments": "📈",
+    "Salary": "💼",
+    "Other": "💳",
+}
+
+MOTIVATIONAL_QUOTES = [
+    {"quote": "A budget is telling your money where to go instead of wondering where it went.", "author": "Dave Ramsey"},
+    {"quote": "Do not save what is left after spending, but spend what is left after saving.", "author": "Warren Buffett"},
+    {"quote": "The habit of saving is itself an education.", "author": "T.T. Munger"},
+    {"quote": "Financial freedom is available to those who learn about it and work for it.", "author": "Robert Kiyosaki"},
+    {"quote": "It's not your salary that makes you rich, it's your spending habits.", "author": "Charles A. Jaffe"},
+    {"quote": "Beware of little expenses; a small leak will sink a great ship.", "author": "Benjamin Franklin"},
+    {"quote": "The secret to wealth is simple: spend less than you earn.", "author": "Thomas J. Stanley"},
+    {"quote": "Money is a terrible master but an excellent servant.", "author": "P.T. Barnum"},
+    {"quote": "Rich people stay rich by living like they're broke. Broke people stay broke by living like they're rich.", "author": "Unknown"},
+    {"quote": "An investment in knowledge pays the best interest.", "author": "Benjamin Franklin"},
+    {"quote": "Never spend your money before you have it.", "author": "Thomas Jefferson"},
+    {"quote": "Wealth consists not in having great possessions, but in having few wants.", "author": "Epictetus"},
+    {"quote": "The art is not in making money, but in keeping it.", "author": "Proverb"},
+    {"quote": "Saving must become a priority, not just a thought.", "author": "Dave Ramsey"},
+    {"quote": "A penny saved is a penny earned.", "author": "Benjamin Franklin"},
+    {"quote": "Don't tell me what you value, show me your budget, and I'll tell you what you value.", "author": "Joe Biden"},
+    {"quote": "Too many people spend money they haven't earned to buy things they don't want.", "author": "Will Rogers"},
+    {"quote": "The more you learn, the more you earn.", "author": "Warren Buffett"},
+    {"quote": "Spend less than you make, save the rest, give generously.", "author": "Unknown"},
+    {"quote": "Financial peace isn't the acquisition of stuff. It's learning to live on less than you make.", "author": "Dave Ramsey"},
+    {"quote": "Money looks better in the bank than on your feet.", "author": "Sophia Amoruso"},
+    {"quote": "Budgeting is the process of deciding how to spend money you don't have.", "author": "Unknown"},
+    {"quote": "The goal isn't more money. The goal is living life on your terms.", "author": "Chris Brogan"},
+    {"quote": "Saving is a habit, not an event.", "author": "Unknown"},
+    {"quote": "You must gain control over your money or the lack of it will forever control you.", "author": "Dave Ramsey"},
+    {"quote": "Opportunity is missed by most people because it is dressed in overalls and looks like work.", "author": "Thomas Edison"},
+    {"quote": "Cut your coat according to your cloth.", "author": "Proverb"},
+    {"quote": "Wealth is not about having a lot of money; it's about having a lot of options.", "author": "Chris Rock"},
+    {"quote": "Live beneath your means but above your fears.", "author": "Unknown"},
+    {"quote": "The question is not whether you can afford it, the question is whether you can afford not to.", "author": "Unknown"},
+    {"quote": "Small steps every day lead to big financial results.", "author": "Unknown"},
+]
 
 
 @dashboard_bp.route("/dashboard")
@@ -16,120 +63,65 @@ def dashboard():
     user_id = session["user_id"]
     now = datetime.utcnow()
 
-    range_option = request.args.get("range", "30")
-    month_option = request.args.get("month", str(now.month))
-    compare = request.args.get("compare", "false")
+    kpi_month = int(request.args.get("kpi_month", now.month))
+    kpi_year = now.year
 
-    if month_option:
-        selected_month = int(month_option)
-        selected_year = now.year
-        if selected_month == 12:
-            anchor_date = datetime(selected_year + 1, 1, 1)
-        else:
-            anchor_date = datetime(selected_year, selected_month + 1, 1)
+    totals_month = int(request.args.get("totals_month", now.month))
+    totals_year = now.year
+
+    summary = calculate_month_summary(user_id, kpi_year, kpi_month)
+
+    if totals_month == 12:
+        totals_anchor = datetime(totals_year + 1, 1, 1)
     else:
-        anchor_date = now
+        totals_anchor = datetime(totals_year, totals_month + 1, 1)
+    totals_start = datetime(totals_year, totals_month, 1)
 
-    if month_option:
-        try:
-            selected_month = int(month_option)
-        except ValueError:
-            selected_month = now.month
-    else:
-        selected_month = now.month
-
-    summary = calculate_month_summary(user_id, now.year, selected_month)
-
-    if range_option == "7":
-        if selected_month == now.month and selected_year == now.year:
-            start_date = now - timedelta(days=7)
-            anchor_date = now
-        else:
-            start_date = anchor_date - timedelta(days=7)
-    elif range_option == "30":
-        if month_option:
-            start_date = datetime(selected_year, selected_month, 1)
-        else:
-            start_date = anchor_date - timedelta(days=30)
-    elif range_option == "90":
-        start_date = anchor_date - timedelta(days=90)
-    else:
-        start_date = anchor_date - timedelta(days=30)
-
-    query = {"user_id": user_id, "date": {"$gte": start_date, "$lt": anchor_date}}
-    transactions = list(spending_collection.find(query).sort("date", 1))
-
-    income_total = round(sum(t["amount"] for t in transactions if t.get("type") == "income"), 2)
-    expense_total = round(sum(t["amount"] for t in transactions if t.get("type") == "expense"), 2)
+    totals_transactions = list(spending_collection.find({
+        "user_id": user_id,
+        "date": {"$gte": totals_start, "$lt": totals_anchor}
+    }))
+    income_total = round(sum(t["amount"] for t in totals_transactions if t.get("type") == "income"), 2)
+    expense_total = round(sum(t["amount"] for t in totals_transactions if t.get("type") == "expense"), 2)
     net_total = round(income_total - expense_total, 2)
 
-    daily_totals = defaultdict(float)
-    for t in transactions:
-        if t["type"] == "expense":
-            daily_totals[t["date"].strftime("%Y-%m-%d")] += t["amount"]
+    if kpi_month == 12:
+        kpi_anchor = datetime(kpi_year + 1, 1, 1)
+    else:
+        kpi_anchor = datetime(kpi_year, kpi_month + 1, 1)
+    kpi_start = datetime(kpi_year, kpi_month, 1)
 
-    daily_income_totals = defaultdict(float)
-    for t in transactions:
-        if t["type"] == "income":
-            daily_income_totals[t["date"].strftime("%Y-%m-%d")] += t["amount"]
+    kpi_transactions = list(spending_collection.find({
+        "user_id": user_id,
+        "date": {"$gte": kpi_start, "$lt": kpi_anchor}
+    }))
 
-    labels = []
-    values = []
-    income_values = []
-    current_date = start_date.date()
-    end_date = (anchor_date - timedelta(days=1)).date()
-    while current_date <= end_date:
-        date_str = current_date.strftime("%Y-%m-%d")
-        labels.append(date_str)
-        values.append(round(daily_totals.get(date_str, 0), 2))
-        income_values.append(round(daily_income_totals.get(date_str, 0), 2))
-        current_date += timedelta(days=1)
+    cat_totals = defaultdict(float)
+    for t in kpi_transactions:
+        if t.get("type") == "expense":
+            cat_totals[t["category"]] += t["amount"]
 
-    comparison_values = []
-    income_comparison_values = []
+    sorted_cats = sorted(cat_totals.items(), key=lambda x: -x[1])
+    top_categories = []
+    for i, (cat, amt) in enumerate(sorted_cats[:3]):
+        top_categories.append({
+            "category": cat,
+            "amount": round(amt, 2),
+            "icon": CATEGORY_ICONS.get(cat, "💳"),
+            "rank": i + 1,
+            "label": ["Most spent category", "2nd highest", "3rd highest"][i]
+        })
 
-    if compare == "true":
-        previous_daily = defaultdict(float)
-        previous_income_daily = defaultdict(float)
+    budget_doc = budget_collection.find_one({
+        "user_id": user_id, "year": kpi_year, "month": kpi_month
+    }) or {}
+    savings = normalize_section(budget_doc.get("savings", {}))
+    bills = normalize_section(budget_doc.get("bills", {}))
+    debts = normalize_section(budget_doc.get("debts", {}))
+    savings_total = round(sum(savings.values()), 2)
+    bills_total = round(sum(bills.values()), 2)
+    debts_total = round(sum(debts.values()), 2)
 
-        if month_option:
-            selected_month = int(month_option)
-            selected_year = now.year
-            if selected_month == 1:
-                prev_month, prev_year = 12, selected_year - 1
-            else:
-                prev_month, prev_year = selected_month - 1, selected_year
-            prev_start = datetime(prev_year, prev_month, 1)
-            prev_end = datetime(prev_year + 1, 1, 1) if prev_month == 12 else datetime(prev_year, prev_month + 1, 1)
-            previous_transactions = list(spending_collection.find({
-                "user_id": user_id,
-                "date": {"$gte": prev_start, "$lt": prev_end}
-            }))
-            for t in previous_transactions:
-                if t["type"] == "expense":
-                    previous_daily[t["date"].day] += t["amount"]
-                if t["type"] == "income":
-                    previous_income_daily[t["date"].day] += t["amount"]
-            comparison_values = [round(previous_daily.get(int(l.split("-")[-1]), 0), 2) for l in labels]
-            income_comparison_values = [round(previous_income_daily.get(int(l.split("-")[-1]), 0), 2) for l in labels]
-        else:
-            period_length = (anchor_date - start_date).days
-            previous_start = start_date - timedelta(days=period_length)
-            previous_transactions = list(spending_collection.find({
-                "user_id": user_id,
-                "date": {"$gte": previous_start, "$lt": start_date}
-            }))
-            for t in previous_transactions:
-                if t["type"] == "expense":
-                    previous_daily[t["date"].strftime("%Y-%m-%d")] += t["amount"]
-                if t["type"] == "income":
-                    previous_income_daily[t["date"].strftime("%Y-%m-%d")] += t["amount"]
-            comparison_values = [round(previous_daily.get(d, 0), 2) for d in labels]
-            income_comparison_values = [round(previous_income_daily.get(d, 0), 2) for d in labels]
-
-    # -------------------------
-    # INCOME VS EXPENSE BAR CHART — Last 6 months
-    # -------------------------
     bar_labels = []
     bar_income = []
     bar_expenses = []
@@ -140,153 +132,47 @@ def dashboard():
         if month_offset <= 0:
             month_offset += 12
             year_offset -= 1
-
         m_start = datetime(year_offset, month_offset, 1)
         m_end = datetime(year_offset + 1, 1, 1) if month_offset == 12 else datetime(year_offset, month_offset + 1, 1)
-
-        m_transactions = list(spending_collection.find({
-            "user_id": user_id,
-            "date": {"$gte": m_start, "$lt": m_end}
-        }))
-
+        m_transactions = list(spending_collection.find({"user_id": user_id, "date": {"$gte": m_start, "$lt": m_end}}))
         m_income = round(sum(t["amount"] for t in m_transactions if t.get("type") == "income"), 2)
         m_expense = round(sum(t["amount"] for t in m_transactions if t.get("type") == "expense"), 2)
-
         bar_labels.append(calendar.month_abbr[month_offset])
         bar_income.append(m_income)
         bar_expenses.append(m_expense)
 
-    # -------------------------
-    # YEAR OVERVIEW — Last 12 months
-    # -------------------------
-    year_labels = []
-    year_expenses = []
-    year_income = []
+    day_of_year = now.timetuple().tm_yday
+    daily_quote = MOTIVATIONAL_QUOTES[day_of_year % len(MOTIVATIONAL_QUOTES)]
 
-    for i in range(12, 0, -1):
-        total_months = now.year * 12 + now.month - 1 - i
-        year_offset = total_months // 12
-        month_offset = total_months % 12 + 1
+    hour = now.hour
+    if hour < 12:
+        greeting = "Good Morning"
+    elif hour < 17:
+        greeting = "Good Afternoon"
+    else:
+        greeting = "Good Evening"
 
-        m_start = datetime(year_offset, month_offset, 1)
-        m_end = datetime(year_offset + 1, 1, 1) if month_offset == 12 else datetime(year_offset, month_offset + 1, 1)
-
-        m_transactions = list(spending_collection.find({
-            "user_id": user_id,
-            "date": {"$gte": m_start, "$lt": m_end}
-        }))
-
-        m_expense = round(sum(t["amount"] for t in m_transactions if t.get("type") == "expense"), 2)
-        m_income = round(sum(t["amount"] for t in m_transactions if t.get("type") == "income"), 2)
-
-        year_labels.append(f"{calendar.month_abbr[month_offset]} {str(year_offset)[2:]}")
-        year_expenses.append(m_expense)
-        year_income.append(m_income)
-
-    months_with_expense_data = [e for e in year_expenses if e > 0]
-    year_monthly_avg = round(sum(months_with_expense_data) / len(months_with_expense_data), 2) if months_with_expense_data else 0
-
-    months_with_income_data = [e for e in year_income if e > 0]
-    year_income_monthly_avg = round(sum(months_with_income_data) / len(months_with_income_data), 2) if months_with_income_data else 0
-
-    # -------------------------
-    # CURRENT YEAR OVERVIEW — Jan to Dec
-    # -------------------------
-    current_year_labels = []
-    current_year_expenses = []
-    current_year_income = []
-
-    for month_num in range(1, 13):
-        m_start = datetime(now.year, month_num, 1)
-        m_end = datetime(now.year + 1, 1, 1) if month_num == 12 else datetime(now.year, month_num + 1, 1)
-
-        m_transactions = list(spending_collection.find({
-            "user_id": user_id,
-            "date": {"$gte": m_start, "$lt": m_end}
-        }))
-
-        m_expense = round(sum(t["amount"] for t in m_transactions if t.get("type") == "expense"), 2)
-        m_income = round(sum(t["amount"] for t in m_transactions if t.get("type") == "income"), 2)
-
-        current_year_labels.append(calendar.month_abbr[month_num])
-        current_year_expenses.append(m_expense)
-        current_year_income.append(m_income)
-
-    current_year_months_with_data = [e for e in current_year_expenses if e > 0]
-    current_year_avg = round(sum(current_year_months_with_data) / len(current_year_months_with_data), 2) if current_year_months_with_data else 0
-
-    current_year_income_months_with_data = [e for e in current_year_income if e > 0]
-    current_year_income_avg = round(sum(current_year_income_months_with_data) / len(current_year_income_months_with_data), 2) if current_year_income_months_with_data else 0
-
-    # -------------------------
-    # PLANNED DEDUCTIONS — Last 6 months (default)
-    # -------------------------
-    deductions_6m_months = []
-    for i in range(5, -1, -1):
-        total_months = now.year * 12 + now.month - 1 - i
-        y = total_months // 12
-        m = total_months % 12 + 1
-        deductions_6m_months.append((y, m))
-
-    deductions_6m = get_planned_deductions_history(user_id, deductions_6m_months)
-
-    # -------------------------
-    # PLANNED DEDUCTIONS — Last 12 months
-    # -------------------------
-    deductions_12m_months = []
-    for i in range(11, -1, -1):
-        total_months = now.year * 12 + now.month - 1 - i
-        y = total_months // 12
-        m = total_months % 12 + 1
-        deductions_12m_months.append((y, m))
-
-    deductions_12m = get_planned_deductions_history(user_id, deductions_12m_months)
-
-    # -------------------------
-    # PLANNED DEDUCTIONS — Per year (2025, 2026, 2027)
-    # -------------------------
-    deductions_by_year = {}
-    summary_by_year = {}
-    for yr in [now.year - 1, now.year, now.year + 1]:
-        yr_months = [(yr, m) for m in range(1, 13)]
-        deductions_by_year[str(yr)] = get_planned_deductions_history(user_id, yr_months)
-        summary_by_year[str(yr)] = get_deductions_summary(user_id, yr_months)
-
-    summary_6m = get_deductions_summary(user_id, deductions_6m_months)
-    summary_12m = get_deductions_summary(user_id, deductions_12m_months)
+    month_names = list(calendar.month_name)[1:]
 
     return render_template(
         "dashboard.html",
-        labels=labels,
-        values=values,
-        income_values=income_values,
-        comparison_values=comparison_values,
-        income_comparison_values=income_comparison_values,
-        compare=compare,
-        range_option=range_option,
-        month_option=month_option,
+        summary=summary,
+        kpi_month=kpi_month,
+        kpi_year=kpi_year,
         income_total=income_total,
         expense_total=expense_total,
         net_total=net_total,
-        summary=summary,
+        totals_month=totals_month,
+        totals_year=totals_year,
+        top_categories=top_categories,
+        savings_total=savings_total,
+        bills_total=bills_total,
+        debts_total=debts_total,
         bar_labels=bar_labels,
         bar_income=bar_income,
         bar_expenses=bar_expenses,
-        year_labels=year_labels,
-        year_expenses=year_expenses,
-        year_income=year_income,
-        year_monthly_avg=year_monthly_avg,
-        year_income_monthly_avg=year_income_monthly_avg,
-        current_year_labels=current_year_labels,
-        current_year_expenses=current_year_expenses,
-        current_year_income=current_year_income,
-        current_year_avg=current_year_avg,
-        current_year_income_avg=current_year_income_avg,
-        deductions_6m=deductions_6m,
-        deductions_12m=deductions_12m,
-        deductions_by_year=deductions_by_year,
-        summary_6m=summary_6m,
-        summary_12m=summary_12m,
-        summary_by_year=summary_by_year,
+        daily_quote=daily_quote,
+        greeting=greeting,
+        month_names=month_names,
+        today=now.strftime("%A, %d %B %Y"),
     )
-    

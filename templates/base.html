@@ -23,6 +23,7 @@
             <div class="sidebar-header" style="padding: 10px -12px;">
                 <img src="{{ url_for('static', filename='logo.png') }}" alt="Foresight Wallet" style="height: 69px; width: 220px; object-fit: contain; object-position: left center; margin-top: -18px;">
             </div>
+
             <!-- MAIN -->
             <div class="sidebar-section">
                 <p class="sidebar-title">MAIN</p>
@@ -34,22 +35,33 @@
                     <i class="bi bi-wallet2"></i>
                     <span>Spending Log</span>
                 </a>
-            </div>
-
-            <!-- SPENDING INSIGHTS -->
-            <div class="sidebar-section">
-                <p class="sidebar-title"> INSIGHTS</p>
-               
-                <a href="/feedback">
-                    <i class="bi bi-chat-left-text"></i>
-                    <span>Personalised Feedback</span>
-                </a>
                 <a href="/budget-tracker">
                     <i class="bi bi-pie-chart"></i>
                     <span>Budget Tracker</span>
                 </a>
+            </div>
 
-                 <a href="/insights">
+            <!-- INSIGHTS -->
+            <div class="sidebar-section">
+                <p class="sidebar-title">INSIGHTS</p>
+                <a href="/spending-trends">
+                    <i class="bi bi-graph-down"></i>
+                    <span>Spending Trends</span>
+                </a>
+                <a href="/income-trends">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Income Trends</span>
+                </a>
+                <a href="/planned-deductions">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Planned Deductions</span>
+                </a>
+                <a href="/feedback">
+                    <i class="bi bi-chat-left-text"></i>
+                    <span>Personalised Feedback</span>
+                </a>
+                
+                <a href="/insights">
                     <i class="bi bi-graph-up"></i>
                     <span>Prediction</span>
                 </a>
@@ -69,7 +81,7 @@
         <!-- Main Content Area -->
         <div class="main-content">
 
-          <!-- Top Navbar -->
+            <!-- Top Navbar -->
             <nav class="navbar navbar-light bg-white shadow-sm mb-4 px-4" style="position:sticky; top:0; z-index:1000;">
                 <div class="d-flex justify-content-between align-items-center w-100">
 

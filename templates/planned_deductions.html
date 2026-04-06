@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-1">Planned Deductions</h2>
+<p class="text-muted mb-4">Track your savings, bills and debt payments over time.</p>
+
+<div class="card shadow-sm p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h5 class="mb-1">Planned Deductions Breakdown</h5>
+            <p class="text-muted small mb-0" id="deductionsSubtitle">Last 6 months · Savings, Bills & Debt</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <button id="deductions6mBtn" class="btn btn-sm btn-primary" onclick="switchDeductionsView('6m')">Last 6 Months</button>
+            <button id="deductions12mBtn" class="btn btn-sm btn-outline-secondary" onclick="switchDeductionsView('12m')">Last 12 Months</button>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="deductionsYearBtn" data-bs-toggle="dropdown">
+                    By Year
+                </button>
+                <ul class="dropdown-menu">
+                    {% for yr in [2025, 2026, 2027] %}
+                    <li><a class="dropdown-item" href="#" onclick="switchDeductionsView('year', '{{ yr }}'); return false;">{{ yr }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="deductionsChart"></div>
+
+    <div id="deductionsSummary" class="mt-4">
+        <hr>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <h6 class="fw-semibold mb-3">💰 Savings Breakdown</h6>
+                <div id="savingsSummaryItems"></div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-semibold mb-3">📋 Bills & Debt Totals</h6>
+                <div class="d-flex justify-content-between align-items-center p-3 rounded mb-2" style="background:#f8f9fa;">
+                    <span class="fw-medium">Total Bills</span>
+                    <span class="fw-bold text-primary" id="summaryBillsTotal">£0.00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background:#f8f9fa;">
+                    <span class="fw-medium">Total Debt Payments</span>
+                    <span class="fw-bold text-danger" id="summaryDebtsTotal">£0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="deductions-data" type="application/json">
+{{ {
+    "deductions6m": deductions_6m,
+    "deductions12m": deductions_12m,
+    "deductionsByYear": deductions_by_year,
+    "summary6m": summary_6m,
+    "summary12m": summary_12m,
+    "summaryByYear": summary_by_year
+} | tojson }}
+</script>
+
+<script>
+    const deductionsData = JSON.parse(document.getElementById("deductions-data").textContent);
+
+    function buildDeductionsSeries(data) {
+        return [
+            { name: 'Savings', data: data.map(d => d.savings) },
+            { name: 'Bills', data: data.map(d => d.bills) },
+            { name: 'Debts', data: data.map(d => d.debts) }
+        ];
+    }
+
+    function buildDeductionsLabels(data) { return data.map(d => d.label); }
+
+    var deductionsChart = new ApexCharts(document.querySelector("#deductionsChart"), {
+        chart: { type: 'bar', height: 350, stacked: true, toolbar: { show: false }, animations: { enabled: true, easing: 'easeinout', speed: 600 } },
+        series: buildDeductionsSeries(deductionsData.deductions6m),
+        xaxis: { categories: buildDeductionsLabels(deductionsData.deductions6m), title: { text: "Month" } },
+        yaxis: { min: 0, title: { text: "Amount (£)" }, labels: { formatter: val => "£" + val.toFixed(2) } },
+        colors: ['#1cc88a', '#3b82f6', '#e74a3b'],
+        plotOptions: { bar: { borderRadius: 4, columnWidth: '55%' } },
+        dataLabels: { enabled: false },
+        legend: { position: 'top' },
+        tooltip: { y: { formatter: val => "£" + val.toFixed(2) } },
+        grid: { borderColor: '#e0e0e0', strokeDashArray: 4 }
+    });
+    deductionsChart.render();
+
+    function renderSummary(summary) {
+        const savingsContainer = document.getElementById("savingsSummaryItems");
+        savingsContainer.innerHTML = "";
+        const savings = summary.savings;
+        if (Object.keys(savings).length === 0) {
+            savingsContainer.innerHTML = '<p class="text-muted small">No savings data for this period.</p>';
+        } else {
+            Object.entries(savings).forEach(([key, val]) => {
+                const item = document.createElement("div");
+                item.className = "d-flex justify-content-between align-items-center p-3 rounded mb-2";
+                item.style.background = "#f8f9fa";
+                item.innerHTML = `<span class="fw-medium">${key}</span><span class="fw-bold text-success">£${val.toFixed(2)}</span>`;
+                savingsContainer.appendChild(item);
+            });
+        }
+        document.getElementById("summaryBillsTotal").textContent = `£${summary.bills_total.toFixed(2)}`;
+        document.getElementById("summaryDebtsTotal").textContent = `£${summary.debts_total.toFixed(2)}`;
+    }
+
+    function switchDeductionsView(mode, year) {
+        let data, summary, subtitle;
+        if (mode === '6m') {
+            data = deductionsData.deductions6m; summary = deductionsData.summary6m;
+            subtitle = 'Last 6 months · Savings, Bills & Debt';
+            document.getElementById("deductions6mBtn").className = "btn btn-sm btn-primary";
+            document.getElementById("deductions12mBtn").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("deductionsYearBtn").textContent = "By Year";
+        } else if (mode === '12m') {
+            data = deductionsData.deductions12m; summary = deductionsData.summary12m;
+            subtitle = 'Last 12 months · Savings, Bills & Debt';
+            document.getElementById("deductions6mBtn").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("deductions12mBtn").className = "btn btn-sm btn-primary";
+            document.getElementById("deductionsYearBtn").textContent = "By Year";
+        } else if (mode === 'year') {
+            data = deductionsData.deductionsByYear[year]; summary = deductionsData.summaryByYear[year];
+            subtitle = `${year} · Savings, Bills & Debt`;
+            document.getElementById("deductions6mBtn").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("deductions12mBtn").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("deductionsYearBtn").textContent = year;
+        }
+        deductionsChart.updateOptions({ xaxis: { categories: buildDeductionsLabels(data) } });
+        deductionsChart.updateSeries(buildDeductionsSeries(data));
+        document.getElementById("deductionsSubtitle").textContent = subtitle;
+        renderSummary(summary);
+    }
+
+    renderSummary(deductionsData.summary6m);
+</script>
+
+{% endblock %}

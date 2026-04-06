@@ -161,9 +161,10 @@ def calculate_month_summary(user_id, year, month):
     today = datetime.utcnow()
     days_passed = today.day if (today.month == month and today.year == year) else calendar.monthrange(year, month)[1]
     total_days = calendar.monthrange(year, month)[1]
-    burn_rate = expense_total / days_passed if days_passed > 0 else 0
-    projected_expense = burn_rate * total_days
-    projected_end_balance = account_balance + monthly_income + income_total - planned_deductions - projected_expense
+    burn_rate = round(expense_total / days_passed, 2) if days_passed > 0 and expense_total > 0 else 0
+    projected_expense = round(burn_rate * total_days, 2)
+    has_data = monthly_income > 0 or account_balance > 0 or expense_total > 0
+    projected_end_balance = round(account_balance + monthly_income + income_total - planned_deductions - projected_expense, 2) if has_data else 0.0
     budget_usage_pct = (expense_total / spending_limit) * 100 if spending_limit > 0 else 0
 
     spending_limit_remaining = round(spending_limit - expense_total, 2)

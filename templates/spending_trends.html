@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-1">Spending Trends</h2>
+<p class="text-muted mb-4">Analyse your daily and monthly spending patterns.</p>
+
+<div class="card shadow-sm p-4 mb-4">
+    <div id="monthlyViewHeader" class="mb-3">
+        <div class="d-flex justify-content-between align-items-start w-100 mb-2">
+            <div>
+                {% set month_names = ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
+                <h5 class="mb-1">Spending Trend</h5>
+                <p class="text-muted small mb-0" id="chartSubtitle">
+                    {% if month_option %}{{ month_names[month_option|int - 1] }} total spend{% endif %}
+                </p>
+            </div>
+            <div class="text-end">
+                {% if compare == "true" and comparison_values %}
+                    {% set current_total = values | sum %}
+                    {% set prev_total = comparison_values | sum %}
+                    {% set diff = current_total - prev_total %}
+                    <div class="fw-bold fs-5">£{{ "%.2f"|format(current_total) }}</div>
+                    {% if diff < 0 %}
+                    <div class="text-success small">⬇ £{{ "%.2f"|format(diff|abs) }} less spent vs previous period</div>
+                    {% elif diff > 0 %}
+                    <div class="text-danger small">⬆ £{{ "%.2f"|format(diff) }} more spent vs previous period</div>
+                    {% else %}
+                    <div class="text-muted small">Same as previous period</div>
+                    {% endif %}
+                    <div class="text-muted small">vs. previous period (£{{ "%.2f"|format(prev_total) }})</div>
+                {% else %}
+                    <div class="fw-bold fs-5">£{{ "%.2f"|format(values | sum) }}</div>
+                    <div class="text-muted small">Total spend this period</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <select id="rangeSelect" class="form-select form-select-sm w-auto">
+                <option value="7" {% if range_option=="7" %}selected{% endif %}>Last 7 Days</option>
+                <option value="30" {% if range_option=="30" %}selected{% endif %}>Last 30 Days</option>
+                <option value="90" {% if range_option=="90" %}selected{% endif %}>Last 3 Months</option>
+            </select>
+            <select id="monthSelect" class="form-select form-select-sm w-auto">
+                {% set month_names = ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
+                {% for i in range(1,13) %}
+                <option value="{{ i }}" {% if month_option|int==i %}selected{% endif %}>{{ month_names[i-1] }}</option>
+                {% endfor %}
+            </select>
+            <button id="compareToggle" class="btn btn-sm btn-outline-primary">Toggle Comparison</button>
+        </div>
+    </div>
+    <div id="chartWrapper" style="touch-action: none;">
+        <div id="spendingChart"></div>
+    </div>
+</div>
+
+<!-- YEAR OVERVIEW -->
+<div class="card shadow-sm p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h5 class="mb-1">Year Overview — Spending</h5>
+            <p class="text-muted small mb-0" id="yearSubtitle">Last 12 months · Monthly avg: <strong>£{{ "%.2f"|format(year_monthly_avg) }}</strong></p>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="btn12Months" class="btn btn-sm btn-primary" onclick="switchYearView('12months')">Last 12 Months</button>
+            <button id="btnCurrentYear" class="btn btn-sm btn-outline-secondary" onclick="switchYearView('currentyear')">Current Year</button>
+        </div>
+    </div>
+    <div id="yearChart"></div>
+</div>
+
+<script id="trends-data" type="application/json">
+{{ {
+    "labels": labels,
+    "values": values,
+    "comparisonValues": comparison_values,
+    "compareEnabled": compare == "true",
+    "yearLabels": year_labels,
+    "yearExpenses": year_expenses,
+    "yearMonthlyAvg": year_monthly_avg,
+    "currentYearLabels": current_year_labels,
+    "currentYearExpenses": current_year_expenses,
+    "currentYearAvg": current_year_avg
+} | tojson }}
+</script>
+
+<script>
+    const chartData = JSON.parse(document.getElementById("trends-data").textContent);
+    const labels = chartData.labels;
+    const values = chartData.values;
+    const comparisonValues = chartData.comparisonValues;
+    const compareEnabled = chartData.compareEnabled;
+    const yearLabels = chartData.yearLabels;
+    const yearExpenses = chartData.yearExpenses;
+    const yearMonthlyAvg = chartData.yearMonthlyAvg;
+    const currentYearLabels = chartData.currentYearLabels;
+    const currentYearExpenses = chartData.currentYearExpenses;
+    const currentYearAvg = chartData.currentYearAvg;
+    const now = new Date();
+
+    const formattedLabels = labels.map(d => {
+        const date = new Date(d);
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    });
+
+    const expenseSeriesData = compareEnabled && comparisonValues.length > 0
+        ? [{ name: "Current Period", data: values }, { name: "Previous Period", data: comparisonValues }]
+        : [{ name: "Current Period", data: values }];
+
+    var spendingChart = new ApexCharts(document.querySelector("#spendingChart"), {
+        chart: {
+            type: 'area', height: 380,
+            zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
+            animations: { enabled: true, easing: 'easeinout', speed: 600 },
+            toolbar: { show: true, tools: { zoom: true, zoomin: true, zoomout: true, pan: true, reset: true, download: true } }
+        },
+        series: expenseSeriesData,
+        xaxis: {
+            categories: formattedLabels,
+            title: { text: "Date" },
+            labels: { rotate: -35, style: { fontSize: '11px' } },
+            tickAmount: Math.min(labels.length, 15)
+        },
+        yaxis: {
+            min: 0,
+            max: values.every(v => v === 0) ? 10 : undefined,
+            title: { text: "Amount (£)" },
+            labels: { formatter: val => "£" + val.toFixed(2) }
+        },
+        stroke: { curve: 'smooth', width: 3 },
+        colors: compareEnabled ? ['#3b82f6', '#f97316'] : ['#3b82f6'],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05, stops: [0, 100] } },
+        markers: { size: 4, hover: { size: 7 } },
+        tooltip: { shared: true, intersect: false, y: { formatter: val => "£" + val.toFixed(2) } },
+        grid: { borderColor: '#e0e0e0', strokeDashArray: 4 },
+        dataLabels: { enabled: false }
+    });
+    spendingChart.render();
+
+    document.getElementById("chartWrapper").addEventListener("wheel", e => {
+        e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    }, { passive: false, capture: true });
+
+    let activeYearLabels = yearLabels;
+    let activeYearAvg = yearMonthlyAvg;
+
+    var yearChart = new ApexCharts(document.querySelector("#yearChart"), {
+        chart: { type: 'bar', height: 380, toolbar: { show: false }, animations: { enabled: true, easing: 'easeinout', speed: 600 } },
+        series: [{ name: 'Expenses', data: yearExpenses }],
+        xaxis: { categories: yearLabels, title: { text: "Month" }, labels: { style: { fontSize: '11px' } } },
+        yaxis: { min: 0, title: { text: "Amount (£)" }, labels: { formatter: val => "£" + val.toFixed(2) } },
+        colors: ['#a78bfa'],
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
+        annotations: {
+            yaxis: [{ y: yearMonthlyAvg, borderColor: '#f97316', strokeDashArray: 6, borderWidth: 2,
+                label: { text: `Avg: £${yearMonthlyAvg.toFixed(2)}`, style: { color: '#fff', background: '#f97316', fontSize: '11px' }, position: 'right', offsetX: -10 } }]
+        },
+        dataLabels: { enabled: false },
+        tooltip: {
+            custom: function({ series, seriesIndex, dataPointIndex }) {
+                const month = activeYearLabels[dataPointIndex];
+                const val = series[seriesIndex][dataPointIndex];
+                const diff = val - activeYearAvg;
+                const diffText = diff >= 0
+                    ? `<span style="color:#e74a3b">+£${diff.toFixed(2)} vs avg</span>`
+                    : `<span style="color:#1cc88a">-£${Math.abs(diff).toFixed(2)} vs avg</span>`;
+                return `<div style="padding:10px 14px; font-size:13px;">
+                    <div style="font-weight:600; margin-bottom:4px;">${month}</div>
+                    <div>Spent: <strong>£${val.toFixed(2)}</strong></div>
+                    <div>${diffText}</div>
+                </div>`;
+            }
+        },
+        grid: { borderColor: '#e0e0e0', strokeDashArray: 4 }
+    });
+    yearChart.render();
+
+    function updateYearChartForMode(mode) {
+        const isCurrentYear = mode === 'currentyear';
+        const data = isCurrentYear ? currentYearExpenses : yearExpenses;
+        const labs = isCurrentYear ? currentYearLabels : yearLabels;
+        const avg = isCurrentYear ? currentYearAvg : yearMonthlyAvg;
+        activeYearLabels = labs;
+        activeYearAvg = avg;
+        yearChart.updateOptions({
+            xaxis: { categories: labs },
+            annotations: { yaxis: [{ y: avg, borderColor: '#f97316', strokeDashArray: 6, borderWidth: 2,
+                label: { text: `Avg: £${avg.toFixed(2)}`, style: { color: '#fff', background: '#f97316', fontSize: '11px' }, position: 'right', offsetX: -10 } }] }
+        });
+        yearChart.updateSeries([{ name: 'Expenses', data: data }]);
+        const periodLabel = isCurrentYear ? `${now.getFullYear()} · ` : 'Last 12 months · ';
+        document.getElementById("yearSubtitle").innerHTML = `${periodLabel}Monthly avg: <strong>£${avg.toFixed(2)}</strong>`;
+    }
+
+    function switchYearView(mode) {
+        if (mode === 'currentyear') {
+            document.getElementById("btn12Months").className = "btn btn-sm btn-outline-secondary";
+            document.getElementById("btnCurrentYear").className = "btn btn-sm btn-primary";
+        } else {
+            document.getElementById("btn12Months").className = "btn btn-sm btn-primary";
+            document.getElementById("btnCurrentYear").className = "btn btn-sm btn-outline-secondary";
+        }
+        updateYearChartForMode(mode);
+    }
+
+    document.getElementById("rangeSelect").addEventListener("change", updatePage);
+    document.getElementById("monthSelect").addEventListener("change", updatePage);
+    document.getElementById("compareToggle").addEventListener("click", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const compare = urlParams.get("compare") === "true";
+        urlParams.set("compare", !compare);
+        window.location.search = urlParams.toString();
+    });
+
+    function updatePage() {
+        const range = document.getElementById("rangeSelect").value;
+        const month = document.getElementById("monthSelect").value;
+        let params = new URLSearchParams(window.location.search);
+        params.set("range", range);
+        params.set("month", month);
+        window.location.search = params.toString();
+    }
+</script>
+
+{% endblock %}
