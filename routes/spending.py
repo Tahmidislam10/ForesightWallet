@@ -59,6 +59,14 @@ def spending_log():
     chart_labels = list(category_totals.keys())
     chart_values = list(category_totals.values())
 
+    income_category_totals = defaultdict(float)
+    for t in transactions:
+        if t["type"] == "income":
+            income_category_totals[t["category"]] += t["amount"]
+
+    income_chart_labels = list(income_category_totals.keys())
+    income_chart_values = list(income_category_totals.values())
+
     if request.args.get("format") == "json":
         return jsonify({
             "transactions": [{
@@ -71,6 +79,8 @@ def spending_log():
             } for t in transactions],
             "chart_labels": chart_labels,
             "chart_values": chart_values,
+            "income_chart_labels": income_chart_labels,
+            "income_chart_values": income_chart_values,
             "active_filter": filter_option,
             "active_month": month_option
         })
@@ -81,6 +91,8 @@ def spending_log():
         categories=PREMADE_CATEGORIES,
         chart_labels=chart_labels,
         chart_values=chart_values,
+        income_chart_labels=income_chart_labels,
+        income_chart_values=income_chart_values,
         active_filter=filter_option,
         active_month=month_option
     )

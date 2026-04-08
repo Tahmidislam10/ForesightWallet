@@ -169,10 +169,24 @@ def insights():
 
         if current_total > 0:
             X = np.array([[features[col] for col in forecast_feature_cols]])
-            predicted_ratio = float(np.clip(forecast_model.predict(X)[0], 0.5, 2.0))
+            raw_prediction = forecast_model.predict(X)[0]
+            predicted_ratio = float(np.clip(raw_prediction, 0.5, 2.0))
+            print("=" * 60)
+            print("ML MODEL FIRED — Random Forest Regressor")
+            print(f"Features sent to model: {features}")
+            print(f"Feature columns used: {forecast_feature_cols}")
+            print(f"Raw model output (ratio): {raw_prediction:.4f}")
+            print(f"Clipped ratio (0.5-2.0): {predicted_ratio:.4f}")
+            print(f"Base total (avg of scope months): will be calculated below")
+            print("=" * 60)
         else:
             predicted_ratio = kaggle_avg_ratio
             history_warning = "No spending data found for this month. Using dataset average as fallback."
+            print("=" * 60)
+            print("ML MODEL SKIPPED — No current spending data, using Kaggle fallback")
+            print(f"Kaggle avg ratio: {kaggle_avg_ratio}")
+            print(f"Kaggle avg total: {kaggle_avg_total}")
+            print("=" * 60)
 
         scope_base_totals = []
         for i in range(1, forecast_scope + 1):
@@ -189,6 +203,9 @@ def insights():
             base_total = kaggle_avg_total
 
         predicted_total = round(base_total * predicted_ratio, 2)
+        print(f"Base total used: £{base_total:.2f}")
+        print(f"Predicted total (base × ratio): £{predicted_total:.2f}")
+        
 
         budget_doc = budget_collection.find_one({
             "user_id": user_id, "year": cur_year, "month": cur_month

@@ -1,7 +1,10 @@
 from flask import Blueprint, render_template, redirect, session
 from datetime import datetime
-from helpers import get_planned_deductions_history, get_deductions_summary
-import calendar
+from helpers import (
+    build_budget_doc_lookup,
+    get_planned_deductions_history_from_lookup,
+    get_deductions_summary_from_lookup,
+)
 
 planned_deductions_bp = Blueprint("planned_deductions", __name__)
 
@@ -22,8 +25,6 @@ def planned_deductions():
         m = total_months % 12 + 1
         deductions_6m_months.append((y, m))
 
-    deductions_6m = get_planned_deductions_history(user_id, deductions_6m_months)
-
     # Last 12 months
     deductions_12m_months = []
     for i in range(11, -1, -1):
@@ -32,18 +33,24 @@ def planned_deductions():
         m = total_months % 12 + 1
         deductions_12m_months.append((y, m))
 
-    deductions_12m = get_planned_deductions_history(user_id, deductions_12m_months)
+    all_months = deductions_6m_months + deductions_12m_months
+    for yr in [now.year - 1, now.year, now.year + 1]:
+        all_months.extend((yr, m) for m in range(1, 13))
 
-    # Per year
+    budget_docs = build_budget_doc_lookup(user_id, all_months)
+
+    deductions_6m = get_planned_deductions_history_from_lookup(deductions_6m_months, budget_docs)
+    deductions_12m = get_planned_deductions_history_from_lookup(deductions_12m_months, budget_docs)
+
     deductions_by_year = {}
     summary_by_year = {}
     for yr in [now.year - 1, now.year, now.year + 1]:
         yr_months = [(yr, m) for m in range(1, 13)]
-        deductions_by_year[str(yr)] = get_planned_deductions_history(user_id, yr_months)
-        summary_by_year[str(yr)] = get_deductions_summary(user_id, yr_months)
+        deductions_by_year[str(yr)] = get_planned_deductions_history_from_lookup(yr_months, budget_docs)
+        summary_by_year[str(yr)] = get_deductions_summary_from_lookup(yr_months, budget_docs)
 
-    summary_6m = get_deductions_summary(user_id, deductions_6m_months)
-    summary_12m = get_deductions_summary(user_id, deductions_12m_months)
+    summary_6m = get_deductions_summary_from_lookup(deductions_6m_months, budget_docs)
+    summary_12m = get_deductions_summary_from_lookup(deductions_12m_months, budget_docs)
 
     return render_template(
         "planned_deductions.html",

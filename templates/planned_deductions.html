@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <h2 class="mb-1">Planned Deductions</h2>
 <p class="text-muted mb-4">Track your savings, bills and debt payments over time.</p>
@@ -30,18 +32,23 @@
     <div id="deductionsSummary" class="mt-4">
         <hr>
         <div class="row g-3">
-            <div class="col-md-6">
-                <h6 class="fw-semibold mb-3">💰 Savings Breakdown</h6>
+            <div class="col-md-4">
+                <h6 class="fw-semibold mb-3 text-success">Savings Breakdown</h6>
                 <div id="savingsSummaryItems"></div>
             </div>
-            <div class="col-md-6">
-                <h6 class="fw-semibold mb-3">📋 Bills & Debt Totals</h6>
-                <div class="d-flex justify-content-between align-items-center p-3 rounded mb-2" style="background:#f8f9fa;">
-                    <span class="fw-medium">Total Bills</span>
+            <div class="col-md-4">
+                <h6 class="fw-semibold mb-3 text-primary">Bills Breakdown</h6>
+                <div id="billsSummaryItems"></div>
+                <div class="d-flex justify-content-between align-items-center p-2 rounded mt-2" style="background:#eff6ff;">
+                    <span class="fw-semibold small">Total Bills</span>
                     <span class="fw-bold text-primary" id="summaryBillsTotal">£0.00</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background:#f8f9fa;">
-                    <span class="fw-medium">Total Debt Payments</span>
+            </div>
+            <div class="col-md-4">
+                <h6 class="fw-semibold mb-3 text-danger">Debt Breakdown</h6>
+                <div id="debtsSummaryItems"></div>
+                <div class="d-flex justify-content-between align-items-center p-2 rounded mt-2" style="background:#fff5f5;">
+                    <span class="fw-semibold small">Total Debt Payments</span>
                     <span class="fw-bold text-danger" id="summaryDebtsTotal">£0.00</span>
                 </div>
             </div>
@@ -74,7 +81,7 @@
     function buildDeductionsLabels(data) { return data.map(d => d.label); }
 
     var deductionsChart = new ApexCharts(document.querySelector("#deductionsChart"), {
-        chart: { type: 'bar', height: 350, stacked: true, toolbar: { show: false }, animations: { enabled: true, easing: 'easeinout', speed: 600 } },
+        chart: { type: 'bar', height: 350, stacked: true, toolbar: { show: true, tools: { zoom: false, zoomin: false, zoomout: false, pan: false, reset: false, download: true } }, animations: { enabled: true, easing: 'easeinout', speed: 600 } },
         series: buildDeductionsSeries(deductionsData.deductions6m),
         xaxis: { categories: buildDeductionsLabels(deductionsData.deductions6m), title: { text: "Month" } },
         yaxis: { min: 0, title: { text: "Amount (£)" }, labels: { formatter: val => "£" + val.toFixed(2) } },
@@ -85,23 +92,61 @@
         tooltip: { y: { formatter: val => "£" + val.toFixed(2) } },
         grid: { borderColor: '#e0e0e0', strokeDashArray: 4 }
     });
-    deductionsChart.render();
+    deductionsChart.render().then(function() {
+        setTimeout(function() {
+            const menu = document.querySelector("#deductionsChart .apexcharts-menu");
+            if (menu) {
+                const pdfItem = document.createElement("div");
+                pdfItem.className = "apexcharts-menu-item";
+                pdfItem.textContent = "Download PDF";
+                pdfItem.addEventListener("click", async function() {
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+                        const pageW = doc.internal.pageSize.getWidth();
+                        const margin = 14;
+                        let y = margin;
+                        const chartEl = document.getElementById("deductionsChart");
+                        const chartCanvas = await html2canvas(chartEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+                        const chartImg = chartCanvas.toDataURL("image/png");
+                        const chartW = pageW - margin * 2;
+                        const chartH = (chartCanvas.height / chartCanvas.width) * chartW;
+                        doc.setFontSize(12);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Planned Deductions Breakdown", margin, y);
+                        y += 5;
+                        doc.addImage(chartImg, "PNG", margin, y, chartW, Math.min(chartH, 80));
+                        doc.save("planned_deductions.pdf");
+                    } catch(err) {
+                        console.error("PDF error:", err);
+                        alert("PDF generation failed. Please try again.");
+                    }
+                });
+                menu.appendChild(pdfItem);
+            }
+        }, 500);
+    });
 
-    function renderSummary(summary) {
-        const savingsContainer = document.getElementById("savingsSummaryItems");
-        savingsContainer.innerHTML = "";
-        const savings = summary.savings;
-        if (Object.keys(savings).length === 0) {
-            savingsContainer.innerHTML = '<p class="text-muted small">No savings data for this period.</p>';
+    function renderSummarySection(containerId, data, colorClass, emptyMsg) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        if (!data || Object.keys(data).length === 0) {
+            container.innerHTML = `<p class="text-muted small">${emptyMsg}</p>`;
         } else {
-            Object.entries(savings).forEach(([key, val]) => {
+            Object.entries(data).forEach(([key, val]) => {
                 const item = document.createElement("div");
-                item.className = "d-flex justify-content-between align-items-center p-3 rounded mb-2";
+                item.className = "d-flex justify-content-between align-items-center p-2 rounded mb-1";
                 item.style.background = "#f8f9fa";
-                item.innerHTML = `<span class="fw-medium">${key}</span><span class="fw-bold text-success">£${val.toFixed(2)}</span>`;
-                savingsContainer.appendChild(item);
+                item.innerHTML = `<span class="small">${key}</span><span class="fw-semibold ${colorClass} small">£${val.toFixed(2)}</span>`;
+                container.appendChild(item);
             });
         }
+    }
+
+    function renderSummary(summary) {
+        renderSummarySection("savingsSummaryItems", summary.savings, "text-success", "No savings data.");
+        renderSummarySection("billsSummaryItems", summary.bills, "text-primary", "No bills data.");
+        renderSummarySection("debtsSummaryItems", summary.debts, "text-danger", "No debt data.");
         document.getElementById("summaryBillsTotal").textContent = `£${summary.bills_total.toFixed(2)}`;
         document.getElementById("summaryDebtsTotal").textContent = `£${summary.debts_total.toFixed(2)}`;
     }

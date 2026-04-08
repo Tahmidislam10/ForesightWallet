@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 <h2 class="mb-1">Spending Trends</h2>
 <p class="text-muted mb-4">Analyse your daily and monthly spending patterns.</p>
 
@@ -103,9 +106,15 @@
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
     });
 
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const selectedMonthIndex = parseInt("{{ month_option }}") - 1;
+    const prevMonthIndex = selectedMonthIndex === 0 ? 11 : selectedMonthIndex - 1;
+    const currentMonthName = monthNames[selectedMonthIndex];
+    const prevMonthName = monthNames[prevMonthIndex];
+
     const expenseSeriesData = compareEnabled && comparisonValues.length > 0
-        ? [{ name: "Current Period", data: values }, { name: "Previous Period", data: comparisonValues }]
-        : [{ name: "Current Period", data: values }];
+        ? [{ name: currentMonthName, data: values }, { name: prevMonthName, data: comparisonValues }]
+        : [{ name: currentMonthName, data: values }];
 
     var spendingChart = new ApexCharts(document.querySelector("#spendingChart"), {
         chart: {
@@ -137,6 +146,46 @@
     });
     spendingChart.render();
 
+    function addSpendingPdfMenuItem() {
+        const menu = document.querySelector("#spendingChart .apexcharts-menu");
+        if (menu && !menu.querySelector(".spending-pdf-item")) {
+            const pdfItem = document.createElement("div");
+            pdfItem.className = "apexcharts-menu-item spending-pdf-item";
+            pdfItem.textContent = "Download PDF";
+            pdfItem.addEventListener("click", async function() {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+                    const pageW = doc.internal.pageSize.getWidth();
+                    const margin = 14;
+                    let y = margin;
+                    const chartEl = document.getElementById("spendingChart");
+                    const chartCanvas = await html2canvas(chartEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+                    const chartImg = chartCanvas.toDataURL("image/png");
+                    const chartW = pageW - margin * 2;
+                    const chartH = (chartCanvas.height / chartCanvas.width) * chartW;
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("Spending Trend", margin, y);
+                    y += 5;
+                    doc.addImage(chartImg, "PNG", margin, y, chartW, Math.min(chartH, 80));
+                    doc.save("spending_trend.pdf");
+                } catch(err) {
+                    console.error("PDF error:", err);
+                    alert("PDF generation failed. Please try again.");
+                }
+            });
+            menu.appendChild(pdfItem);
+        }
+    }
+
+    const spendingHamburger = document.querySelector("#spendingChart .apexcharts-toolbar");
+    if (spendingHamburger) {
+        spendingHamburger.addEventListener("click", function() {
+            setTimeout(addSpendingPdfMenuItem, 50);
+        });
+    }
+
     document.getElementById("chartWrapper").addEventListener("wheel", e => {
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
     }, { passive: false, capture: true });
@@ -145,7 +194,7 @@
     let activeYearAvg = yearMonthlyAvg;
 
     var yearChart = new ApexCharts(document.querySelector("#yearChart"), {
-        chart: { type: 'bar', height: 380, toolbar: { show: false }, animations: { enabled: true, easing: 'easeinout', speed: 600 } },
+        chart: { type: 'bar', height: 380, toolbar: { show: true, tools: { zoom: false, zoomin: false, zoomout: false, pan: false, reset: false, download: true } }, animations: { enabled: true, easing: 'easeinout', speed: 600 } },
         series: [{ name: 'Expenses', data: yearExpenses }],
         xaxis: { categories: yearLabels, title: { text: "Month" }, labels: { style: { fontSize: '11px' } } },
         yaxis: { min: 0, title: { text: "Amount (£)" }, labels: { formatter: val => "£" + val.toFixed(2) } },
@@ -173,7 +222,40 @@
         },
         grid: { borderColor: '#e0e0e0', strokeDashArray: 4 }
     });
-    yearChart.render();
+    yearChart.render().then(function() {
+        setTimeout(function() {
+            const yearMenu = document.querySelector("#yearChart .apexcharts-menu");
+            if (yearMenu) {
+                const pdfItem = document.createElement("div");
+                pdfItem.className = "apexcharts-menu-item";
+                pdfItem.textContent = "Download PDF";
+                pdfItem.addEventListener("click", async function() {
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+                        const pageW = doc.internal.pageSize.getWidth();
+                        const margin = 14;
+                        let y = margin;
+                        const yearEl = document.getElementById("yearChart");
+                        const yearCanvas = await html2canvas(yearEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+                        const yearImg = yearCanvas.toDataURL("image/png");
+                        const chartW = pageW - margin * 2;
+                        const chartH = (yearCanvas.height / yearCanvas.width) * chartW;
+                        doc.setFontSize(12);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Year Overview — Spending", margin, y);
+                        y += 5;
+                        doc.addImage(yearImg, "PNG", margin, y, chartW, Math.min(chartH, 80));
+                        doc.save("year_overview_spending.pdf");
+                    } catch(err) {
+                        console.error("PDF error:", err);
+                        alert("PDF generation failed. Please try again.");
+                    }
+                });
+                yearMenu.appendChild(pdfItem);
+            }
+        }, 500);
+    });
 
     function updateYearChartForMode(mode) {
         const isCurrentYear = mode === 'currentyear';

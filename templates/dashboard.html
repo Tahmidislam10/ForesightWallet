@@ -15,7 +15,7 @@
         </p>
     </div>
 
-    <div class="p-3 rounded shadow-sm" style="background:#f8fafc; max-width:420px;">
+    <div class="p-3 rounded" style="background:#f8fafc; max-width:420px; border: 2px solid #2563eb;">
         <p class="mb-1 text-muted" style="font-size:0.7rem; text-transform:uppercase;">
             Motivational Quote of the Day
         </p>
@@ -62,13 +62,13 @@
             </div>
             {% endmacro %}
 
-            {{ kpi("Starting Balance", "£" ~ "%.2f"|format(summary.account_balance), "From Budget Tracker", "#1e3a8a") }}
+            {{ kpi("Starting Balance", "£" ~ "%.2f"|format(summary.account_balance), "From Budget Tracker", "#2563eb") }}
             {{ kpi("End Balance", "£" ~ "%.2f"|format(summary.real_balance), "After all transactions", "#2563eb") }}
-            {{ kpi("Net Salary", "£" ~ "%.2f"|format(summary.current_budget), "After deductions", "#059669") }}
-            {{ kpi("Projected Balance", "£" ~ "%.2f"|format(summary.projected_end_balance), "Estimated month end", "#7c3aed") }}
-            {{ kpi("Daily Burn Rate", "£" ~ summary.burn_rate, "Avg daily spend", "#d97706") }}
+            {{ kpi("Net Salary", "£" ~ "%.2f"|format(summary.current_budget), "After deductions", "#2563eb") }}
+            {{ kpi("Projected Balance", "£" ~ "%.2f"|format(summary.projected_end_balance), "Estimated month end", "#2563eb") }}
+            {{ kpi("Daily Burn Rate", "£" ~ summary.burn_rate, "Avg daily spend", "#2563eb") }}
             {{ kpi("Budget Used", summary.budget_usage_pct ~ "%", "£" ~ "%.2f"|format(summary.expense_total) ~ " of £" ~ "%.2f"|format(summary.spending_limit), "#dc2626") }}
-            {{ kpi("Limit Remaining", "£" ~ "%.2f"|format(summary.spending_limit_remaining), "Of £" ~ "%.2f"|format(summary.spending_limit), "#0891b2") }}
+            {{ kpi("Limit Remaining", "£" ~ "%.2f"|format(summary.spending_limit_remaining), "Of £" ~ "%.2f"|format(summary.spending_limit), "#dc2626") }}
 
         </div>
 
@@ -163,44 +163,26 @@
 
 <!-- ================= PLANNED DEDUCTIONS ================= -->
 <div class="card shadow-sm mb-4 border-0">
-
     <div class="card-header bg-white d-flex justify-content-between align-items-center border-0">
-        <h6 class="fw-semibold mb-0">
-            Planned Deductions — {{ month_names[kpi_month-1] }}
-        </h6>
-
-        <a href="/planned-deductions" class="small text-decoration-none text-primary">
-            View full breakdown →
-        </a>
+        <h6 class="fw-semibold mb-0">Planned Deductions — {{ month_names[kpi_month-1] }}</h6>
+        <a href="/planned-deductions" class="small text-decoration-none text-primary">View full breakdown →</a>
     </div>
-
     <div class="card-body">
-        <div class="row g-3 text-center">
-
-            <div class="col-md-4">
-                <div class="p-3 rounded border bg-light">
-                    <p class="text-muted small">Savings</p>
-                    <h5 class="text-success">£{{ "%.2f"|format(savings_total) }}</h5>
-                </div>
+        <div class="row g-3">
+            <div class="col-md-4 text-center">
+                <p class="fw-semibold small mb-0" style="color:#059669;">Savings — £{{ "%.2f"|format(savings_total) }}</p>
+                <div id="savingsDonut"></div>
             </div>
-
-            <div class="col-md-4">
-                <div class="p-3 rounded border bg-light">
-                    <p class="text-muted small">Bills</p>
-                    <h5 class="text-primary">£{{ "%.2f"|format(bills_total) }}</h5>
-                </div>
+            <div class="col-md-4 text-center">
+                <p class="fw-semibold small mb-0" style="color:#2563eb;">Bills — £{{ "%.2f"|format(bills_total) }}</p>
+                <div id="billsDonut"></div>
             </div>
-
-            <div class="col-md-4">
-                <div class="p-3 rounded border bg-light">
-                    <p class="text-muted small">Debt Payments</p>
-                    <h5 class="text-danger">£{{ "%.2f"|format(debts_total) }}</h5>
-                </div>
+            <div class="col-md-4 text-center">
+                <p class="fw-semibold small mb-0" style="color:#dc2626;">Debt Payments — £{{ "%.2f"|format(debts_total) }}</p>
+                <div id="debtsDonut"></div>
             </div>
-
         </div>
     </div>
-
 </div>
 
 <!-- ================= CHART ================= -->
@@ -214,6 +196,15 @@
         <div id="incomeExpenseChart"></div>
     </div>
 </div>
+
+
+<script id="deductions-data" type="application/json">
+{{ {
+    "savings": savings_data,
+    "bills": bills_data,
+    "debts": debts_data
+} | tojson }}
+</script>
 
 <!-- ================= DATA ================= -->
 <script id="dashboard-bar-data" type="application/json">
@@ -241,7 +232,48 @@ function updateTotalsMonth() {
 }
 </script>
 
-<!-- ================= CHART ================= -->
+
+
+<!-- ================= DONUT CHARTS ================= -->
+<script>
+    const deductionsRaw = JSON.parse(document.getElementById("deductions-data").textContent);
+
+    function renderDonut(elementId, data, colors) {
+        const labels = Object.keys(data).filter(k => data[k] > 0);
+        const values = labels.map(k => data[k]);
+        if (labels.length === 0) return;
+        var chart = new ApexCharts(document.querySelector(elementId), {
+            chart: { type: 'donut', height: 220, toolbar: { show: false } },
+            series: values,
+            labels: labels,
+            colors: colors,
+            legend: { position: 'bottom', fontSize: '11px' },
+            dataLabels: { enabled: false },
+            tooltip: { y: { formatter: val => "£" + val.toFixed(2) } },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '60%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                formatter: () => '£' + values.reduce((a,b) => a+b, 0).toFixed(2)
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        chart.render();
+    }
+
+    renderDonut('#savingsDonut', deductionsRaw.savings, ['#059669', '#34d399', '#6ee7b7', '#a7f3d0']);
+    renderDonut('#billsDonut', deductionsRaw.bills, ['#2563eb', '#60a5fa', '#93c5fd', '#bfdbfe']);
+    renderDonut('#debtsDonut', deductionsRaw.debts, ['#dc2626', '#f87171', '#fca5a5', '#fecaca']);
+</script>
+
 <script>
 const barData = JSON.parse(document.getElementById("dashboard-bar-data").textContent);
 

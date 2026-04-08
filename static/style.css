@@ -1,5 +1,10 @@
+html.dark-mode-early body,
+html.dark-mode-early {
+    background-color: #0f172a !important;
+}
+
 :root {
-    --primary-blue: #1e3a8a;      /* royal blue */
+    --primary-blue: #1e3a8a;    /* royal blue */
     --primary-blue-light: #e0e7ff;
     --sidebar-bg: #ffffff;
     --background-light: #f2f3f5;
@@ -13,6 +18,7 @@
 body {
     background-color: var(--background-light);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 /* ===== SIDEBAR ===== */
@@ -378,3 +384,416 @@ body {
 .budget-table tbody tr:hover {
     background-color: #f8fafc;
 }
+
+/* ===== DARK MODE ===== */
+body.dark-mode {
+    --background-light: #0f172a;
+    --sidebar-bg: #1e293b;
+    --surface-grey: #1e293b;
+    --surface-grey-soft: #1e293b;
+    --surface-border: #334155;
+    --primary-blue-light: #1e3a5f;
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+
+body.dark-mode .sidebar {
+    background: #1e293b;
+    border-right-color: #334155;
+}
+
+body.dark-mode .sidebar a {
+    color: #93c5fd;
+}
+
+body.dark-mode .sidebar a:hover {
+    background: #1e3a5f;
+}
+
+body.dark-mode .sidebar-title {
+    color: #94a3b8;
+}
+
+body.dark-mode .sidebar-section + .sidebar-section {
+    border-top-color: #334155;
+}
+
+body.dark-mode .sidebar i {
+    color: #93c5fd;
+}
+
+body.dark-mode .navbar {
+    background-color: #1e293b !important;
+    border-bottom: 1px solid #334155;
+}
+
+body.dark-mode .navbar .fw-semibold {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .btn-outline-secondary {
+    color: #94a3b8;
+    border-color: #475569;
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode .card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0;
+}
+
+body.dark-mode .card-header {
+    background-color: #1e293b !important;
+    border-bottom-color: #334155 !important;
+    color: #e2e8f0;
+}
+
+body.dark-mode .bg-white {
+    background-color: #1e293b !important;
+}
+
+body.dark-mode .text-dark {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .text-muted {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .border {
+    border-color: #334155 !important;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: #0f172a;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: #0f172a;
+    border-color: #2563eb;
+    color: #e2e8f0;
+    box-shadow: 0 0 0 0.2rem rgba(37,99,235,0.25);
+}
+
+body.dark-mode .table {
+    color: #e2e8f0;
+}
+
+body.dark-mode .spending-table thead th {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .spending-table tbody td {
+    color: #e2e8f0;
+    border-color: #334155;
+}
+
+body.dark-mode .spending-table tbody tr:hover {
+    background-color: #263548;
+}
+
+body.dark-mode .spending-table-wrap {
+    background: #1e293b;
+}
+
+body.dark-mode hr {
+    border-color: #334155;
+}
+
+body.dark-mode .alert-danger {
+    background-color: #3b1111;
+    border-color: #7f1d1d;
+    color: #fca5a5;
+}
+
+body.dark-mode .alert-success {
+    background-color: #052e16;
+    border-color: #14532d;
+    color: #86efac;
+}
+
+body.dark-mode .alert-warning {
+    background-color: #2d1f00;
+    border-color: #78350f;
+    color: #fcd34d;
+}
+
+body.dark-mode .alert-info {
+    background-color: #0c1a2e;
+    border-color: #1e3a5f;
+    color: #93c5fd;
+}
+
+body.dark-mode .badge.bg-danger { background-color: #dc2626 !important; }
+body.dark-mode .badge.bg-success { background-color: #16a34a !important; }
+body.dark-mode .badge.bg-primary { background-color: #2563eb !important; }
+
+body.dark-mode .progress {
+    background-color: #334155;
+}
+
+body.dark-mode .dropdown-menu {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .dropdown-item {
+    color: #e2e8f0;
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode [style*="background:#f8fafc"],
+body.dark-mode [style*="background: #f8fafc"],
+body.dark-mode [style*="background:#f8f9fa"],
+body.dark-mode [style*="background: #f8f9fa"],
+body.dark-mode [style*="background:#eff6ff"],
+body.dark-mode [style*="background:#fff5f5"] {
+    background-color: #263548 !important;
+}
+
+/* Fix chart backgrounds */
+body.dark-mode .apexcharts-canvas,
+body.dark-mode .apexcharts-canvas svg,
+body.dark-mode .apexcharts-inner {
+    background: transparent !important;
+}
+
+body.dark-mode .apexcharts-gridline {
+    stroke: #334155 !important;
+}
+
+body.dark-mode .apexcharts-xaxis-label,
+body.dark-mode .apexcharts-yaxis-label,
+body.dark-mode .apexcharts-xaxis text,
+body.dark-mode .apexcharts-yaxis text {
+    fill: #94a3b8 !important;
+}
+
+body.dark-mode .apexcharts-title-text,
+body.dark-mode .apexcharts-subtitle-text {
+    fill: #e2e8f0 !important;
+}
+
+body.dark-mode .apexcharts-legend-text {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .apexcharts-tooltip {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .apexcharts-tooltip-title {
+    background: #263548 !important;
+    border-bottom-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .apexcharts-menu {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .apexcharts-menu-item:hover {
+    background: #334155 !important;
+}
+
+/* Fix table rows */
+body.dark-mode .table td,
+body.dark-mode .table th {
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+    background-color: transparent !important;
+}
+
+body.dark-mode .table tbody tr {
+    background-color: #1e293b !important;
+}
+
+body.dark-mode .table tbody tr:hover {
+    background-color: #263548 !important;
+}
+
+body.dark-mode .table thead th {
+    background-color: #263548 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Fix feedback cards */
+body.dark-mode [style*="background:#fff"],
+body.dark-mode [style*="background: #fff"],
+body.dark-mode [style*="background:white"],
+body.dark-mode [style*="background: white"] {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .fw-semibold,
+body.dark-mode .fw-bold,
+body.dark-mode h1, body.dark-mode h2,
+body.dark-mode h3, body.dark-mode h4,
+body.dark-mode h5, body.dark-mode h6,
+body.dark-mode p, body.dark-mode span,
+body.dark-mode td, body.dark-mode th,
+body.dark-mode label, body.dark-mode small {
+    color: #e2e8f0;
+}
+
+/* Keep coloured text intact */
+body.dark-mode .text-success { color: #1cc88a !important; }
+body.dark-mode .text-danger { color: #f87171 !important; }
+body.dark-mode .text-primary { color: #60a5fa !important; }
+body.dark-mode .text-warning { color: #fcd34d !important; }
+body.dark-mode .text-muted { color: #94a3b8 !important; }
+
+/* Fix inline styled backgrounds on risk/feedback pages */
+body.dark-mode [style*="background: #f1f5f9"],
+body.dark-mode [style*="background:#f1f5f9"] {
+    background-color: #263548 !important;
+}
+
+/* Fix spending log table specifically */
+body.dark-mode .spending-table tbody td {
+    color: #e2e8f0 !important;
+    background-color: #1e293b !important;
+}
+
+body.dark-mode .spending-table thead th {
+    background-color: #263548 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Fix progress bars background */
+body.dark-mode .progress {
+    background-color: #334155 !important;
+}
+
+/* Fix select month dropdown */
+body.dark-mode .form-select option {
+    background-color: #1e293b;
+    color: #e2e8f0;
+}
+
+/* Fix feedback and risk score guide cards with inline backgrounds */
+body.dark-mode [style*="background:#f0fff4"],
+body.dark-mode [style*="background: #f0fff4"] {
+    background-color: #0d2b1a !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode [style*="background:#fffdf0"],
+body.dark-mode [style*="background: #fffdf0"] {
+    background-color: #2b2500 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode [style*="background:#fff5f5"],
+body.dark-mode [style*="background: #fff5f5"] {
+    background-color: #2b0d0d !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode [style*="background:#f0fff4"] *,
+body.dark-mode [style*="background:#fffdf0"] *,
+body.dark-mode [style*="background:#fff5f5"] * {
+    color: #e2e8f0 !important;
+}
+
+/* Keep badge and coloured text intact inside these cards */
+body.dark-mode [style*="background:#f0fff4"] .text-muted,
+body.dark-mode [style*="background:#fffdf0"] .text-muted,
+body.dark-mode [style*="background:#fff5f5"] .text-muted {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode [style*="background:#f0fff4"] .badge,
+body.dark-mode [style*="background:#fffdf0"] .badge,
+body.dark-mode [style*="background:#fff5f5"] .badge {
+    color: #ffffff !important;
+}
+
+/* Fix "Doing Well" and feedback insight cards */
+body.dark-mode .card .card,
+body.dark-mode .card > div[style*="background"] {
+    background-color: #263548 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .card .card *,
+body.dark-mode .card > div[style*="background"] * {
+    color: #e2e8f0 !important;
+}
+
+/* Fix donut chart centre text */
+body.dark-mode .apexcharts-datalabel-label,
+body.dark-mode .apexcharts-datalabel-value,
+body.dark-mode .apexcharts-pie-label {
+    fill: #e2e8f0 !important;
+}
+
+body.dark-mode .apexcharts-donut-slice-dataLabel text,
+body.dark-mode text.apexcharts-datalabels {
+    fill: #e2e8f0 !important;
+}
+
+/* Fix all SVG text in charts */
+body.dark-mode .apexcharts-canvas text {
+    fill: #e2e8f0 !important;
+}
+
+/* Fix planned deductions summary item rows */
+body.dark-mode #savingsSummaryItems .d-flex,
+body.dark-mode #billsSummaryItems .d-flex,
+body.dark-mode #debtsSummaryItems .d-flex {
+    background-color: #263548 !important;
+}
+
+body.dark-mode #savingsSummaryItems span,
+body.dark-mode #billsSummaryItems span,
+body.dark-mode #debtsSummaryItems span {
+    color: #e2e8f0 !important;
+}
+
+/* Fix light-coloured inline background cards (feedback "doing well" cards) */
+body.dark-mode [style*="background: #f0fdf4"],
+body.dark-mode [style*="background:#f0fdf4"],
+body.dark-mode [style*="background: #fefce8"],
+body.dark-mode [style*="background:#fefce8"],
+body.dark-mode [style*="background: #fff7ed"],
+body.dark-mode [style*="background:#fff7ed"] {
+    background-color: #263548 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Force all text inside cards to be readable */
+body.dark-mode .card p,
+body.dark-mode .card span,
+body.dark-mode .card small,
+body.dark-mode .card div {
+    color: #e2e8f0;
+}
+
+/* But preserve intentional colours */
+body.dark-mode .card .text-success { color: #1cc88a !important; }
+body.dark-mode .card .text-danger { color: #f87171 !important; }
+body.dark-mode .card .text-primary { color: #60a5fa !important; }
+body.dark-mode .card .text-warning { color: #fcd34d !important; }
+body.dark-mode .card .text-muted { color: #94a3b8 !important; }
+body.dark-mode .badge { color: #ffffff !important; }

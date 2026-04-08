@@ -78,12 +78,47 @@ def get_planned_deductions_history(user_id, months):
         })
     return result
 
+def build_budget_doc_lookup(user_id, months):
+    unique_months = sorted(set(months))
+    if not unique_months:
+        return {}
+
+    month_filters = [{"year": year, "month": month} for year, month in unique_months]
+    docs = budget_collection.find({
+        "user_id": user_id,
+        "$or": month_filters
+    })
+
+    return {
+        (doc.get("year"), doc.get("month")): doc
+        for doc in docs
+    }
+
+def get_planned_deductions_history_from_lookup(months, budget_docs):
+    result = []
+    for year, month in months:
+        budget_doc = budget_docs.get((year, month), {})
+
+        savings = normalize_section(budget_doc.get("savings", {}))
+        bills = normalize_section(budget_doc.get("bills", {}))
+        debts = normalize_section(budget_doc.get("debts", {}))
+
+        result.append({
+            "label": f"{calendar.month_abbr[month]} {str(year)[2:]}",
+            "savings": round(sum(savings.values()), 2),
+            "bills": round(sum(bills.values()), 2),
+            "debts": round(sum(debts.values()), 2),
+        })
+    return result
+
 def get_deductions_summary(user_id, months):
     """
     Returns aggregated totals for each individual savings item,
     plus total bills and total debts across the given months.
     """
     savings_totals = defaultdict(float)
+    bills_totals = defaultdict(float)
+    debts_totals = defaultdict(float)
     bills_total = 0.0
     debts_total = 0.0
 
@@ -107,11 +142,82 @@ def get_deductions_summary(user_id, months):
             else:
                 savings_totals[k.strip()] += v
 
+        for k, v in bills.items():
+            lower_k = k.strip().lower()
+            matched_key = next((existing for existing in bills_totals if existing.lower() == lower_k), None)
+            if matched_key:
+                bills_totals[matched_key] += v
+            else:
+                bills_totals[k.strip()] += v
+
+        for k, v in debts.items():
+            lower_k = k.strip().lower()
+            matched_key = next((existing for existing in debts_totals if existing.lower() == lower_k), None)
+            if matched_key:
+                debts_totals[matched_key] += v
+            else:
+                debts_totals[k.strip()] += v
+
         bills_total += sum(bills.values())
         debts_total += sum(debts.values())
 
     return {
         "savings": {k: round(v, 2) for k, v in savings_totals.items()},
+        "bills": {k: round(v, 2) for k, v in bills_totals.items()},
+        "debts": {k: round(v, 2) for k, v in debts_totals.items()},
+        "bills_total": round(bills_total, 2),
+        "debts_total": round(debts_total, 2)
+    }
+
+def get_deductions_summary_from_lookup(months, budget_docs):
+    """
+    Returns aggregated totals for each individual savings item,
+    plus total bills and total debts across the given months.
+    """
+    savings_totals = defaultdict(float)
+    bills_totals = defaultdict(float)
+    debts_totals = defaultdict(float)
+    bills_total = 0.0
+    debts_total = 0.0
+
+    for year, month in months:
+        budget_doc = budget_docs.get((year, month), {})
+
+        savings = normalize_section(budget_doc.get("savings", {}))
+        bills = normalize_section(budget_doc.get("bills", {}))
+        debts = normalize_section(budget_doc.get("debts", {}))
+
+        for k, v in savings.items():
+            lower_k = k.strip().lower()
+            matched_key = next((existing for existing in savings_totals if existing.lower() == lower_k), None)
+            if matched_key:
+                savings_totals[matched_key] += v
+            else:
+                savings_totals[k.strip()] += v
+
+        for k, v in bills.items():
+            lower_k = k.strip().lower()
+            matched_key = next((existing for existing in bills_totals if existing.lower() == lower_k), None)
+            if matched_key:
+                bills_totals[matched_key] += v
+            else:
+                bills_totals[k.strip()] += v
+
+        for k, v in debts.items():
+            lower_k = k.strip().lower()
+            matched_key = next((existing for existing in debts_totals if existing.lower() == lower_k), None)
+            if matched_key:
+                debts_totals[matched_key] += v
+            else:
+                debts_totals[k.strip()] += v
+
+        bills_total += sum(bills.values())
+        debts_total += sum(debts.values())
+
+    return {
+        "savings": {k: round(v, 2) for k, v in savings_totals.items()},
+        "bills": {k: round(v, 2) for k, v in bills_totals.items()},
+        "debts": {k: round(v, 2) for k, v in debts_totals.items()},
         "bills_total": round(bills_total, 2),
         "debts_total": round(debts_total, 2)
     }

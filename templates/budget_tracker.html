@@ -4,10 +4,11 @@
 <div class="budget-tracker-page">
     <h2 class="mb-4">Budget Tracker</h2>
 
-    <div class="card shadow-sm p-3 mb-4">
+    <!-- MONTH SELECTOR -->
+    <div class="card shadow-sm p-3 mb-4 border-0">
         <form method="GET" action="/budget-tracker" class="row g-3 align-items-end">
             <div class="col-md-3">
-                <label class="form-label">Month</label>
+                <label class="form-label text-muted small text-uppercase" style="letter-spacing:0.05em;">Month</label>
                 <select name="month" class="form-select">
                     {% for month in month_options %}
                     <option value="{{ month.value }}" {% if selected_month == month.value %}selected{% endif %}>
@@ -17,12 +18,10 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Year</label>
+                <label class="form-label text-muted small text-uppercase" style="letter-spacing:0.05em;">Year</label>
                 <select name="year" class="form-select">
                     {% for year in years %}
-                    <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>
-                        {{ year }}
-                    </option>
+                    <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -33,129 +32,131 @@
     </div>
 
     <!-- KPI CARDS -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-2">
-            <div class="card shadow-sm p-3">
-                <h6>Net Salary</h6>
-                <h3 class="{% if current_budget < 0 %}text-danger{% endif %}">
-                    £{{ "%.2f"|format(current_budget) }}
-                </h3>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card shadow-sm p-3">
-                <h6>Monthly Income</h6>
-                <h3>£{{ "%.2f"|format(starting_budget) }}</h3>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card shadow-sm p-3">
-                <h6>Planned Deductions</h6>
-                <h3>£{{ "%.2f"|format(planned_deductions) }}</h3>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card shadow-sm p-3">
-                <h6>Spending Log Impact</h6>
-                <h3 class="{% if net_spending_log < 0 %}text-danger{% else %}text-success{% endif %}">
-                    £{{ "%.2f"|format(net_spending_log) }}
-                </h3>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card shadow-sm p-3">
-                <h6>Income Added</h6>
-                <h3 class="text-success">£{{ "%.2f"|format(month_income_total) }}</h3>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card shadow-sm p-3">
-                <h6>Expenses Deducted</h6>
-                <h3 class="text-danger">£{{ "%.2f"|format(month_expense_total) }}</h3>
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col">
+                    <div class="p-3 rounded h-100 bg-white border">
+                        <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Net Salary</p>
+                        <h5 class="fw-semibold mb-1" style="color:#2563eb;">
+                            £{{ "%.2f"|format(current_budget) }}
+                        </h5>
+                        <p class="text-muted small mb-0">Salary after deductions</p>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 rounded h-100 bg-white border">
+                        <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Monthly Income</p>
+                        <h5 class="fw-semibold mb-1" style="color:#2563eb;">£{{ "%.2f"|format(starting_budget) }}</h5>
+                        <p class="text-muted small mb-0">Gross monthly income</p>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="p-3 rounded h-100 bg-white border">
+                        <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Planned Deductions</p>
+                        <h5 class="fw-semibold mb-1" style="color:#2563eb;">£{{ "%.2f"|format(planned_deductions) }}</h5>
+                        <p class="text-muted small mb-0">Savings, bills & debts</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- MONTHLY BUDGET SETUP -->
-    <div class="row g-4 mb-4">
-        <div class="col-lg-12">
-            <div class="card shadow-sm p-4">
-                <h5 class="mb-3">Monthly Budget Setup</h5>
-                <form method="POST" action="/budget-tracker" class="row g-3">
-                    <input type="hidden" name="year" value="{{ selected_year }}">
-                    <input type="hidden" name="month" value="{{ selected_month }}">
-                    <div class="col-12">
-                        <div class="p-3 rounded border bg-white">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-semibold">Spent Out Of Spending Limit</span>
-                                <span class="fw-bold {% if spending_limit > 0 and spending_limit_spent > spending_limit %}text-danger{% endif %}">
-                                    £{{ "%.2f"|format(spending_limit_spent) }} / £{{ "%.2f"|format(spending_limit) }}
-                                </span>
-                            </div>
-                            {% if spending_limit > 0 %}
-                            <small class="{% if spending_limit_remaining < 0 %}text-danger{% else %}text-success{% endif %}">
-                                {% if spending_limit_remaining >= 0 %}
-                                Remaining: £{{ "%.2f"|format(spending_limit_remaining) }} ({{ "%.1f"|format(spending_limit_used_pct) }}% used)
-                                {% else %}
-                                Over limit by £{{ "%.2f"|format(spending_limit_remaining|abs) }} ({{ "%.1f"|format(spending_limit_used_pct) }}% used)
-                                {% endif %}
-                            </small>
-                            <div class="progress mt-2" style="height: 10px;">
-                                <div class="progress-bar
-                                    {% if spending_limit_used_pct < 60 %}bg-success
-                                    {% elif spending_limit_used_pct < 85 %}bg-warning
-                                    {% else %}bg-danger{% endif %}"
-                                    role="progressbar"
-                                    style="width: {{ [spending_limit_used_pct, 100]|min }}%;"
-                                    aria-valuenow="{{ spending_limit_used_pct }}"
-                                    aria-valuemin="0" aria-valuemax="100">
-                                </div>
-                            </div>
+    <div class="card shadow-sm p-4 mb-4 border-0">
+        <h6 class="fw-semibold mb-4">Monthly Budget Setup</h6>
+        <form method="POST" action="/budget-tracker" class="row g-3">
+            <input type="hidden" name="year" value="{{ selected_year }}">
+            <input type="hidden" name="month" value="{{ selected_month }}">
+
+            <!-- SPENDING METER -->
+            <div class="col-12">
+                <div class="p-4 rounded border" style="background:#f8fafc;">
+                    <div class="text-center mb-3">
+                        <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Spending Limit Progress</p>
+                        <h3 class="fw-bold mb-0 {% if spending_limit_remaining < 0 %}text-danger{% else %}text-dark{% endif %}">
+                            £{{ "%.2f"|format(spending_limit_spent) }}
+                            <span class="text-muted fw-normal" style="font-size:1rem;">/ £{{ "%.2f"|format(spending_limit) }}</span>
+                        </h3>
+                        {% if spending_limit > 0 %}
+                        <p class="mt-1 mb-0 small {% if spending_limit_remaining < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {% if spending_limit_remaining >= 0 %}
+                            £{{ "%.2f"|format(spending_limit_remaining) }} remaining &mdash; {{ "%.1f"|format(spending_limit_used_pct) }}% used
                             {% else %}
-                            <small class="text-muted">Set a spending limit to track how much of the limit has been used.</small>
+                            Over limit by £{{ "%.2f"|format(spending_limit_remaining|abs) }} &mdash; {{ "%.1f"|format(spending_limit_used_pct) }}% used
                             {% endif %}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% if spending_limit > 0 %}
+                    <div class="progress mt-3" style="height: 16px; border-radius: 8px;">
+                        <div class="progress-bar
+                            {% if spending_limit_used_pct < 60 %}bg-success
+                            {% elif spending_limit_used_pct < 85 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            role="progressbar"
+                            data-width="{{ [spending_limit_used_pct, 100]|min }}"
+                            aria-valuenow="{{ spending_limit_used_pct }}"
+                            aria-valuemin="0" aria-valuemax="100">
                         </div>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label">Spending Limit (£)</label>
-                        <input type="number" name="spending_limit" class="form-control" min="0" step="0.01"
-                            value="{{ '%.2f'|format(spending_limit) }}">
+                    <div class="d-flex justify-content-between mt-1">
+                        <span class="text-muted" style="font-size:0.75rem;">£0</span>
+                        <span class="text-muted" style="font-size:0.75rem;">£{{ "%.2f"|format(spending_limit) }}</span>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label">Current Account Balance (£)</label>
-                        <small class="text-muted d-block mb-1">Enter your real bank balance. This carries forward each month automatically.</small>
-                        <input type="number" name="account_balance" class="form-control" min="0" step="0.01"
-                            value="{{ '%.2f'|format(account_balance) }}">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Monthly Income (£)</label>
+                    {% else %}
+                    <p class="text-muted small text-center mb-0">Set a spending limit below to track usage.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label text-muted small text-uppercase" style="letter-spacing:0.05em;">Spending Limit (£)</label>
+                <input type="number" name="spending_limit" class="form-control" min="0" step="0.01"
+                    value="{{ '%.2f'|format(spending_limit) }}">
+            </div>
+            <div class="col-12">
+                <label class="form-label text-muted small text-uppercase" style="letter-spacing:0.05em;">Current Account Balance (£)</label>
+                <small class="text-muted d-block mb-1">Enter your real bank balance. Carries forward each month automatically.</small>
+                <input type="number" name="account_balance" class="form-control" min="0" step="0.01"
+                    value="{{ '%.2f'|format(account_balance) }}">
+            </div>
+            <div class="col-12">
+                <label class="form-label text-muted small text-uppercase" style="letter-spacing:0.05em;">Monthly Income (£)</label>
+                <div class="row g-2">
+                    <div class="col-md-8">
                         <input type="number" name="monthly_income" class="form-control" min="0" step="0.01"
                             value="{{ '%.2f'|format(monthly_income) }}">
                     </div>
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary me-2" name="action" value="save_overview">
-                            Save Monthly Budget
-                        </button>
-                        <button type="submit" class="btn btn-outline-danger" name="action" value="reset_overview"
-                            onclick="return confirm('Reset spending limit and monthly income to £0.00 for this month?');">
-                            Reset Values
-                        </button>
+                    <div class="col-md-4">
+                        <input type="date" name="income_date" id="incomeDatePicker" class="form-control"
+                            value="{{ income_date }}">
+                        <small class="text-muted">Income received date</small>
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary me-2" name="action" value="save_overview">Save Monthly Budget</button>
+                <button type="submit" class="btn btn-outline-danger" name="action" value="reset_overview"
+                    onclick="return confirm('Reset spending limit and monthly income to £0.00 for this month?');">Reset Values</button>
+            </div>
+        </form>
     </div>
+
+    <!-- PLANNED DEDUCTIONS DIVIDER -->
+    <h2 class="mb-4">Planned Deductions</h2>
 
     <!-- SAVINGS / BILLS / DEBT -->
     <div class="row g-4 mb-4">
 
         <!-- SAVINGS -->
         <div class="col-lg-4">
-            <div class="card shadow-sm p-4 h-100">
+            <div class="card shadow-sm p-4 h-100 border-0">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Savings</h5>
-                    <button type="button" class="btn btn-sm btn-outline-secondary edit-toggle"
-                        data-section="savings">✏️ Edit</button>
+                    <h6 class="mb-0 fw-semibold">Savings</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary edit-toggle" data-section="savings">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
                 </div>
                 <form method="POST" action="/budget-tracker" id="savingsForm">
                     <input type="hidden" name="action" value="save_savings">
@@ -166,17 +167,15 @@
                             {% for key, val in savings_data.items() %}
                             <tr>
                                 <td class="view-cell ps-0">
-                                    <span class="fw-medium">{{ key }}</span>
+                                    <span class="fw-medium small">{{ key }}</span>
                                     <input type="hidden" name="savings_key" value="{{ key }}">
                                 </td>
                                 <td class="edit-cell ps-0" style="display:none;">
-                                    <input type="text" name="savings_key"
-                                        class="form-control form-control-sm" value="{{ key }}" disabled>
+                                    <input type="text" name="savings_key" class="form-control form-control-sm" value="{{ key }}" disabled>
                                 </td>
                                 <td>
                                     <input type="number" name="savings_val" step="0.01"
-                                        class="form-control form-control-sm text-end"
-                                        value="{{ '%.2f'|format(val) }}">
+                                        class="form-control form-control-sm text-end" value="{{ '%.2f'|format(val) }}">
                                 </td>
                                 <td class="edit-cell" style="display:none; width:40px;">
                                     <button type="button" class="btn btn-sm btn-outline-danger remove-row">🗑</button>
@@ -185,15 +184,12 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <button type="button"
-                        class="btn btn-outline-secondary btn-sm mt-2 mb-3 add-row edit-cell"
-                        data-table="savingsTable" data-section="savings"
-                        style="display:none;">+ Add Item</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mt-2 mb-3 add-row edit-cell"
+                        data-table="savingsTable" data-section="savings" style="display:none;">+ Add Item</button>
                     <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="fw-semibold">Total: £{{ "%.2f"|format(savings_total) }}</span>
+                        <span class="fw-semibold small">Total: £{{ "%.2f"|format(savings_total) }}</span>
                         <div>
-                            <button type="submit" class="btn btn-primary btn-sm me-2 edit-cell"
-                                style="display:none;">✔ Apply</button>
+                            <button type="submit" class="btn btn-primary btn-sm me-2 edit-cell" style="display:none;">Apply</button>
                             <button type="submit" class="btn btn-outline-primary btn-sm">Save Savings</button>
                         </div>
                     </div>
@@ -203,11 +199,12 @@
 
         <!-- BILLS -->
         <div class="col-lg-4">
-            <div class="card shadow-sm p-4 h-100">
+            <div class="card shadow-sm p-4 h-100 border-0">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Bills</h5>
-                    <button type="button" class="btn btn-sm btn-outline-secondary edit-toggle"
-                        data-section="bills">✏️ Edit</button>
+                    <h6 class="mb-0 fw-semibold">Bills</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary edit-toggle" data-section="bills">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
                 </div>
                 <form method="POST" action="/budget-tracker" id="billsForm">
                     <input type="hidden" name="action" value="save_bills">
@@ -218,17 +215,15 @@
                             {% for key, val in bills_data.items() %}
                             <tr>
                                 <td class="view-cell ps-0">
-                                    <span class="fw-medium">{{ key }}</span>
+                                    <span class="fw-medium small">{{ key }}</span>
                                     <input type="hidden" name="bills_key" value="{{ key }}">
                                 </td>
                                 <td class="edit-cell ps-0" style="display:none;">
-                                    <input type="text" name="bills_key"
-                                        class="form-control form-control-sm" value="{{ key }}" disabled>
+                                    <input type="text" name="bills_key" class="form-control form-control-sm" value="{{ key }}" disabled>
                                 </td>
                                 <td>
                                     <input type="number" name="bills_val" step="0.01"
-                                        class="form-control form-control-sm text-end"
-                                        value="{{ '%.2f'|format(val) }}">
+                                        class="form-control form-control-sm text-end" value="{{ '%.2f'|format(val) }}">
                                 </td>
                                 <td class="edit-cell" style="display:none; width:40px;">
                                     <button type="button" class="btn btn-sm btn-outline-danger remove-row">🗑</button>
@@ -237,15 +232,12 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <button type="button"
-                        class="btn btn-outline-secondary btn-sm mt-2 mb-3 add-row edit-cell"
-                        data-table="billsTable" data-section="bills"
-                        style="display:none;">+ Add Item</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mt-2 mb-3 add-row edit-cell"
+                        data-table="billsTable" data-section="bills" style="display:none;">+ Add Item</button>
                     <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="fw-semibold">Total: £{{ "%.2f"|format(bills_total) }}</span>
+                        <span class="fw-semibold small">Total: £{{ "%.2f"|format(bills_total) }}</span>
                         <div>
-                            <button type="submit" class="btn btn-primary btn-sm me-2 edit-cell"
-                                style="display:none;">✔ Apply</button>
+                            <button type="submit" class="btn btn-primary btn-sm me-2 edit-cell" style="display:none;">Apply</button>
                             <button type="submit" class="btn btn-outline-primary btn-sm">Save Bills</button>
                         </div>
                     </div>
@@ -255,11 +247,12 @@
 
         <!-- DEBT -->
         <div class="col-lg-4">
-            <div class="card shadow-sm p-4 h-100">
+            <div class="card shadow-sm p-4 h-100 border-0">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Debt</h5>
-                    <button type="button" class="btn btn-sm btn-outline-secondary edit-toggle"
-                        data-section="debts">✏️ Edit</button>
+                    <h6 class="mb-0 fw-semibold">Debt</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary edit-toggle" data-section="debts">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
                 </div>
                 <form method="POST" action="/budget-tracker" id="debtsForm">
                     <input type="hidden" name="action" value="save_debts">
@@ -270,17 +263,15 @@
                             {% for key, val in debts_data.items() %}
                             <tr>
                                 <td class="view-cell ps-0">
-                                    <span class="fw-medium">{{ key }}</span>
+                                    <span class="fw-medium small">{{ key }}</span>
                                     <input type="hidden" name="debts_key" value="{{ key }}">
                                 </td>
                                 <td class="edit-cell ps-0" style="display:none;">
-                                    <input type="text" name="debts_key"
-                                        class="form-control form-control-sm" value="{{ key }}" disabled>
+                                    <input type="text" name="debts_key" class="form-control form-control-sm" value="{{ key }}" disabled>
                                 </td>
                                 <td>
                                     <input type="number" name="debts_val" step="0.01"
-                                        class="form-control form-control-sm text-end"
-                                        value="{{ '%.2f'|format(val) }}">
+                                        class="form-control form-control-sm text-end" value="{{ '%.2f'|format(val) }}">
                                 </td>
                                 <td class="edit-cell" style="display:none; width:40px;">
                                     <button type="button" class="btn btn-sm btn-outline-danger remove-row">🗑</button>
@@ -289,15 +280,12 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <button type="button"
-                        class="btn btn-outline-secondary btn-sm mt-2 mb-3 add-row edit-cell"
-                        data-table="debtsTable" data-section="debts"
-                        style="display:none;">+ Add Item</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mt-2 mb-3 add-row edit-cell"
+                        data-table="debtsTable" data-section="debts" style="display:none;">+ Add Item</button>
                     <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="fw-semibold">Total: £{{ "%.2f"|format(debts_total) }}</span>
+                        <span class="fw-semibold small">Total: £{{ "%.2f"|format(debts_total) }}</span>
                         <div>
-                            <button type="submit" class="btn btn-primary btn-sm me-2 edit-cell"
-                                style="display:none;">✔ Apply</button>
+                            <button type="submit" class="btn btn-primary btn-sm me-2 edit-cell" style="display:none;">Apply</button>
                             <button type="submit" class="btn btn-outline-primary btn-sm">Save Debt</button>
                         </div>
                     </div>
@@ -309,15 +297,19 @@
 </div>
 
 <script>
-    // EDIT TOGGLE
+    // Apply progress bar width from data attributes
+    document.querySelectorAll(".progress-bar[data-width]").forEach(bar => {
+        const width = bar.dataset.width;
+        bar.style.width = width + "%";
+        bar.style.borderRadius = "8px";
+    });
+
     document.querySelectorAll(".edit-toggle").forEach(btn => {
         btn.addEventListener("click", function () {
             const section = this.dataset.section;
             const form = document.getElementById(`${section}Form`);
             const isEditing = form.classList.contains("editing");
-
             if (isEditing) {
-                // Exit edit mode
                 form.classList.remove("editing");
                 form.querySelectorAll(".edit-cell").forEach(el => {
                     el.style.display = "none";
@@ -327,11 +319,10 @@
                     el.style.display = "";
                     el.querySelectorAll("input").forEach(i => i.disabled = false);
                 });
-                this.textContent = "✏️ Edit";
+                this.innerHTML = '<i class="bi bi-pencil"></i> Edit';
                 this.classList.remove("btn-warning");
-                this.classList.add("btn-outline-secondary");
+                this.classList.add("btn-outline-primary");
             } else {
-                // Enter edit mode
                 form.classList.add("editing");
                 form.querySelectorAll(".edit-cell").forEach(el => {
                     el.style.display = "";
@@ -341,14 +332,13 @@
                     el.style.display = "none";
                     el.querySelectorAll("input").forEach(i => i.disabled = true);
                 });
-                this.textContent = "✕ Cancel";
-                this.classList.remove("btn-outline-secondary");
+                this.innerHTML = '✕ Cancel';
+                this.classList.remove("btn-outline-primary");
                 this.classList.add("btn-warning");
             }
         });
     });
 
-    // ADD ROW
     const placeholders = {
         savings: "e.g. Pension Fund",
         bills: "e.g. Council Tax",
@@ -364,12 +354,10 @@
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td class="edit-cell ps-0">
-                    <input type="text" name="${section}_key"
-                        class="form-control form-control-sm" placeholder="${placeholder}">
+                    <input type="text" name="${section}_key" class="form-control form-control-sm" placeholder="${placeholder}">
                 </td>
                 <td>
-                    <input type="number" name="${section}_val" step="0.01"
-                        class="form-control form-control-sm text-end" value="0.00">
+                    <input type="number" name="${section}_val" step="0.01" class="form-control form-control-sm text-end" value="0.00">
                 </td>
                 <td class="edit-cell" style="width:40px;">
                     <button type="button" class="btn btn-sm btn-outline-danger remove-row">🗑</button>
@@ -382,12 +370,22 @@
         });
     });
 
-    // REMOVE ROW
     document.querySelectorAll(".remove-row").forEach(btn => {
         btn.addEventListener("click", function () {
             this.closest("tr").remove();
         });
     });
+
+    // Restrict income date picker to selected month only
+    const incomeDatePicker = document.getElementById("incomeDatePicker");
+    if (incomeDatePicker) {
+        const selectedYear = {{ selected_year }};
+        const selectedMonth = {{ selected_month }};
+        const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+        const monthStr = String(selectedMonth).padStart(2, "0");
+        incomeDatePicker.min = `${selectedYear}-${monthStr}-01`;
+        incomeDatePicker.max = `${selectedYear}-${monthStr}-${String(lastDay).padStart(2, "0")}`;
+    }
 </script>
 
 {% endblock %}

@@ -85,7 +85,11 @@ def spending_trends():
         for t in previous_transactions:
             if t.get("type") == "expense":
                 previous_daily[t["date"].day] += t["amount"]
-        comparison_values = [round(previous_daily.get(int(l.split("-")[-1]), 0), 2) for l in labels]
+        num_days = len(labels)
+        comparison_values = []
+        for i in range(num_days):
+            day_num = i + 1
+            comparison_values.append(round(previous_daily.get(day_num, 0), 2))
 
     # Year overview — last 12 months
     year_labels = []

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <h2 class="mb-1">Prediction</h2>
 <p class="text-muted mb-4">Machine learning powered spending predictions based on your financial history.</p>
@@ -14,16 +16,14 @@
                 <option value="" disabled {% if not active_feature %}selected{% endif %}>-- Select a feature --</option>
                 <option value="forecast" {% if active_feature == 'forecast' %}selected{% endif %}>Spending Forecast & Budget Prediction</option>
                 <option value="category" {% if active_feature == 'category' %}selected{% endif %}>Top Category Prediction</option>
-                <option value="balance" disabled>End of Month Balance (Coming Soon)</option>
                 <option value="clustering" {% if active_feature == 'clustering' %}selected{% endif %}>Spending Behaviour Clustering</option>
             </select>
         </div>
     </div>
     <ul class="text-muted small mb-0">
-        <li><strong>Spending Forecast & Budget Prediction</strong> — Predicts your daily spending pattern for the next 30 days and whether you will exceed your spending limit, using a Random Forest Regressor trained on the BudgetWise synthetic dataset (Arfath R, 2024)</li>
+        <li><strong>Spending Forecast & Budget Prediction</strong> — Predicts your daily spending pattern for the next 30 days and whether you will exceed your spending limit</li>
         <li><strong>Top Category Prediction</strong> — Predicts which spending category will be highest next month</li>
-        <li><strong>End of Month Balance</strong> — Predicts your account balance at end of next month</li>
-        <li><strong>Spending Behaviour Clustering</strong> — Classifies your spending behaviour type using K-Means clustering</li>
+        <li><strong>Spending Behaviour Clustering</strong> — Classifies your spending behaviour type into Saver, Balanced, or Leisure-Heavy</li>
     </ul>
 </div>
 
@@ -67,50 +67,44 @@
         {% endif %}
 
         <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card shadow-sm p-3 h-100">
-                    <h6>Predicted Total</h6>
-                    <h3 class="{% if prediction_data.will_exceed %}text-danger{% else %}text-primary{% endif %}">
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="p-3 rounded shadow-sm h-100 bg-white border">
+                    <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Predicted Total</p>
+                    <h5 class="fw-semibold mb-1" style="color:{% if prediction_data.will_exceed %}#dc2626{% else %}#2563eb{% endif %};">
                         £{{ "%.2f"|format(prediction_data.predicted_total) }}
-                    </h3>
-                    <small class="text-muted">Next 30 days from today</small>
+                    </h5>
+                    <p class="text-muted small mb-0">Next 30 days from today</p>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm p-3 h-100">
-                    <h6>Spending Limit</h6>
-                    <h3>{% if prediction_data.spending_limit > 0 %}£{{ "%.2f"|format(prediction_data.spending_limit) }}{% else %}Not Set{% endif %}</h3>
-                    <small class="text-muted">This month's limit</small>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="p-3 rounded shadow-sm h-100 bg-white border">
+                    <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Spending Limit</p>
+                    <h5 class="fw-semibold mb-1" style="color:#2563eb;">
+                        {% if prediction_data.spending_limit > 0 %}£{{ "%.2f"|format(prediction_data.spending_limit) }}{% else %}Not Set{% endif %}
+                    </h5>
+                    <p class="text-muted small mb-0">This month's limit</p>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm p-3 h-100">
-                    <h6>Budget Prediction</h6>
-                    <h3 class="{% if prediction_data.will_exceed %}text-danger{% else %}text-success{% endif %}">
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="p-3 rounded shadow-sm h-100 bg-white border">
+                    <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Budget Prediction</p>
+                    <h5 class="fw-semibold mb-1 {% if prediction_data.will_exceed %}text-danger{% else %}text-success{% endif %}">
                         {% if prediction_data.will_exceed %}At Risk{% else %}Within Limit{% endif %}
-                    </h3>
-                    <small class="text-muted">
-                        {% if prediction_data.spending_limit > 0 %}
-                            {{ prediction_data.spending_limit_pct }}% of limit
-                        {% else %}
-                            No limit set
-                        {% endif %}
-                    </small>
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        {% if prediction_data.spending_limit > 0 %}{{ prediction_data.spending_limit_pct }}% of limit{% else %}No limit set{% endif %}
+                    </p>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm p-3 h-100">
-                    <h6>Predicted Ratio</h6>
-                    <h3>x{{ prediction_data.predicted_ratio }}</h3>
-                    <small class="text-muted">
-                        {% if prediction_data.predicted_ratio > 1.0 %}
-                            Spending predicted to increase
-                        {% elif prediction_data.predicted_ratio < 1.0 %}
-                            Spending predicted to decrease
-                        {% else %}
-                            Spending predicted to stay similar
-                        {% endif %}
-                    </small>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="p-3 rounded shadow-sm h-100 bg-white border">
+                    <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Predicted Ratio</p>
+                    <h5 class="fw-semibold mb-1" style="color:#2563eb;">x{{ prediction_data.predicted_ratio }}</h5>
+                    <p class="text-muted small mb-0">
+                        {% if prediction_data.predicted_ratio > 1.0 %}Spending predicted to increase
+                        {% elif prediction_data.predicted_ratio < 1.0 %}Spending predicted to decrease
+                        {% else %}Spending predicted to stay similar{% endif %}
+                    </p>
                 </div>
             </div>
         </div>
@@ -131,54 +125,8 @@
 
         <div id="forecastChart"></div>
 
-        <div class="card shadow-sm p-3 mt-4">
-            <h6 class="mb-3">Model Information</h6>
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <tbody>
-                        <tr>
-                            <td class="text-muted small">Algorithm</td>
-                            <td class="fw-semibold small">Random Forest Regressor</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">Training Dataset</td>
-                            <td class="fw-semibold small">BudgetWise Synthetic Finance Dataset (Arfath R, 2024) — 15,900 transactions, 150 users</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">Training Records</td>
-                            <td class="fw-semibold small">965 user-month records (time-based split)</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">Test R²</td>
-                            <td class="fw-semibold small">{{ prediction_data.test_r2 }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">CV R² (5-fold TimeSeriesSplit)</td>
-                            <td class="fw-semibold small text-success">{{ prediction_data.cv_r2 }} (±0.0659)</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">CV MAE</td>
-                            <td class="fw-semibold small">{{ prediction_data.cv_mae }} ratio units</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted small">History Depth</td>
-                            <td class="fw-semibold small">
-                                {{ prediction_data.months_available }} month{% if prediction_data.months_available != 1 %}s{% endif %} available
-                                {% if prediction_data.months_available < 3 %}
-                                <span class="badge bg-warning text-dark ms-1">Limited</span>
-                                {% else %}
-                                <span class="badge bg-success ms-1">Good</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <p class="text-muted small mt-3 mb-0">
-            Predictions are generated by a Random Forest model trained on synthetic data.
-            They are estimations only and do not constitute financial advice.
+            Predictions are estimations only and do not constitute financial advice.
         </p>
 
         {% endif %}
@@ -222,15 +170,15 @@
         {% if category_data.top_categories %}
         <div class="row g-3 mb-4">
             {% for cat in category_data.top_categories %}
-            <div class="col-md-4">
-                <div class="card shadow-sm p-3 h-100">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="mb-0">{{ cat.category }}</h6>
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="p-3 rounded shadow-sm h-100 bg-white border">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <p class="text-muted mb-0 small text-uppercase" style="letter-spacing:0.05em;">{{ cat.category }}</p>
                         <span class="badge bg-primary">{{ cat.predicted_pct }}%</span>
                     </div>
-                    <h3 class="text-primary mb-1">£{{ "%.2f"|format(cat.predicted_amount) }}</h3>
-                    <small class="text-muted">Predicted spend next 30 days</small>
-                    <div class="progress mt-2" style="height: 6px;">
+                    <h5 class="fw-semibold mb-1" style="color:#2563eb;">£{{ "%.2f"|format(cat.predicted_amount) }}</h5>
+                    <p class="text-muted small mb-2">Predicted spend next 30 days</p>
+                    <div class="progress" style="height: 6px;">
                         <div class="progress-bar" style="width: {{ cat.predicted_pct }}%"></div>
                     </div>
                 </div>
@@ -303,39 +251,33 @@
 
         <!-- METRICS ROW -->
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="card shadow-sm p-3 h-100">
-                    <h6>Expense Ratio</h6>
-                    <h3 class="{% if clustering_data.expense_ratio > 90 %}text-danger{% elif clustering_data.expense_ratio > 70 %}text-warning{% else %}text-success{% endif %}">
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="p-3 rounded shadow-sm h-100 bg-white border">
+                    <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Expense Ratio</p>
+                    <h5 class="fw-semibold mb-1" style="color:{% if clustering_data.expense_ratio > 90 %}#dc2626{% elif clustering_data.expense_ratio > 70 %}#f59e0b{% else %}#1cc88a{% endif %};">
                         {{ clustering_data.expense_ratio }}%
-                    </h3>
-                    <small class="text-muted">Of income spent on expenses</small>
+                    </h5>
+                    <p class="text-muted small mb-0">Of income spent on expenses</p>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm p-3 h-100">
-                    <h6>Savings Rate</h6>
-                    <h3 class="{% if clustering_data.savings_pct < 10 %}text-danger{% elif clustering_data.savings_pct < 20 %}text-warning{% else %}text-success{% endif %}">
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="p-3 rounded shadow-sm h-100 bg-white border">
+                    <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Savings Rate</p>
+                    <h5 class="fw-semibold mb-1" style="color:{% if clustering_data.savings_pct < 10 %}#dc2626{% elif clustering_data.savings_pct < 20 %}#f59e0b{% else %}#1cc88a{% endif %};">
                         {{ clustering_data.savings_pct }}%
-                    </h3>
-                    <small class="text-muted">Estimated savings from income</small>
+                    </h5>
+                    <p class="text-muted small mb-0">Estimated savings from income</p>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm p-3 h-100">
-                    <h6>Top Category</h6>
-                    <h3 class="text-primary">
-                        {% if clustering_data.category_breakdown %}
-                            {{ clustering_data.category_breakdown[0].category }}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </h3>
-                    <small class="text-muted">
-                        {% if clustering_data.category_breakdown %}
-                            {{ clustering_data.category_breakdown[0].pct }}% of spend
-                        {% endif %}
-                    </small>
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="p-3 rounded shadow-sm h-100 bg-white border">
+                    <p class="text-muted mb-1 small text-uppercase" style="letter-spacing:0.05em;">Top Category</p>
+                    <h5 class="fw-semibold mb-1" style="color:#2563eb;">
+                        {% if clustering_data.category_breakdown %}{{ clustering_data.category_breakdown[0].category }}{% else %}N/A{% endif %}
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        {% if clustering_data.category_breakdown %}{{ clustering_data.category_breakdown[0].pct }}% of spend{% endif %}
+                    </p>
                 </div>
             </div>
         </div>
@@ -410,9 +352,9 @@
 
     var forecastChart = new ApexCharts(document.querySelector("#forecastChart"), {
         chart: {
-            type: 'line',
+            type: 'area',
             height: 380,
-            toolbar: { show: false },
+            toolbar: { show: true, tools: { zoom: false, zoomin: false, zoomout: false, pan: false, reset: false, download: true } },
             animations: { enabled: true, easing: 'easeinout', speed: 600 }
         },
         series: series,
@@ -429,15 +371,14 @@
         },
         stroke: {
             curve: 'smooth',
-            width: [3, 2],
-            dashArray: [0, 5]
+            width: 3
         },
         colors: ['#3b82f6', '#f97316'],
         fill: {
             type: 'gradient',
             gradient: {
                 shadeIntensity: 1,
-                opacityFrom: 0.3,
+                opacityFrom: 0.45,
                 opacityTo: 0.05,
                 stops: [0, 100]
             }
@@ -452,7 +393,40 @@
         grid: { borderColor: '#e0e0e0', strokeDashArray: 4 },
         dataLabels: { enabled: false }
     });
-    forecastChart.render();
+    forecastChart.render().then(function() {
+        setTimeout(function() {
+            const menu = document.querySelector("#forecastChart .apexcharts-menu");
+            if (menu) {
+                const pdfItem = document.createElement("div");
+                pdfItem.className = "apexcharts-menu-item";
+                pdfItem.textContent = "Download PDF";
+                pdfItem.addEventListener("click", async function() {
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+                        const pageW = doc.internal.pageSize.getWidth();
+                        const margin = 14;
+                        let y = margin;
+                        const chartEl = document.getElementById("forecastChart");
+                        const chartCanvas = await html2canvas(chartEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+                        const chartImg = chartCanvas.toDataURL("image/png");
+                        const chartW = pageW - margin * 2;
+                        const chartH = (chartCanvas.height / chartCanvas.width) * chartW;
+                        doc.setFontSize(12);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Spending Forecast", margin, y);
+                        y += 5;
+                        doc.addImage(chartImg, "PNG", margin, y, chartW, Math.min(chartH, 80));
+                        doc.save("spending_forecast.pdf");
+                    } catch(err) {
+                        console.error("PDF error:", err);
+                        alert("PDF generation failed. Please try again.");
+                    }
+                });
+                menu.appendChild(pdfItem);
+            }
+        }, 500);
+    });
 </script>
 {% endif %}
 

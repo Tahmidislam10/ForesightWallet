@@ -17,11 +17,13 @@ from routes.income_trends import income_trends_bp
 from routes.planned_deductions import planned_deductions_bp
 from routes.category_prediction import category_bp
 from routes.clustering import clustering_bp
+from routes.walletwise import walletwise_bp
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # Allow HTTP for local dev
 
 bcrypt.init_app(app)
 
@@ -37,6 +39,7 @@ app.register_blueprint(income_trends_bp)
 app.register_blueprint(planned_deductions_bp)
 app.register_blueprint(category_bp)
 app.register_blueprint(clustering_bp)
+app.register_blueprint(walletwise_bp)
 
 @app.context_processor
 def inject_user():

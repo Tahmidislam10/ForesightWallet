@@ -52,16 +52,47 @@ def budget_tracker():
         }
 
         if action == "save_overview":
+            monthly_income_val = parse_float(request.form.get("monthly_income"))
+            income_date_str = request.form.get("income_date", "").strip()
+
             budget_collection.update_one(
                 base_query,
                 {"$set": {
                     "spending_limit": parse_float(request.form.get("spending_limit")),
-                    "monthly_income": parse_float(request.form.get("monthly_income")),
+                    "monthly_income": monthly_income_val,
                     "account_balance": parse_float(request.form.get("account_balance")),
                     "updated_at": datetime.utcnow()
                 }},
                 upsert=True
             )
+
+            # Log monthly income as a spending log transaction if amount > 0 and date provided
+            if monthly_income_val > 0 and income_date_str:
+                try:
+                    income_date = datetime.strptime(income_date_str, "%Y-%m-%d")
+                    # Remove any existing monthly income transaction for this month
+                    spending_collection.delete_one({
+                        "user_id": session["user_id"],
+                        "type": "income",
+                        "category": "Salary",
+                        "description": "Monthly Income",
+                        "date": {
+                            "$gte": datetime(form_year_int, form_month_int, 1),
+                            "$lt": datetime(form_year_int + 1, 1, 1) if form_month_int == 12 else datetime(form_year_int, form_month_int + 1, 1)
+                        }
+                    })
+                    # Insert fresh transaction
+                    spending_collection.insert_one({
+                        "user_id": session["user_id"],
+                        "date": income_date,
+                        "category": "Salary",
+                        "description": "Monthly Income",
+                        "amount": monthly_income_val,
+                        "type": "income",
+                        "created_at": datetime.utcnow()
+                    })
+                except ValueError:
+                    pass
             
         elif action == "reset_overview":
             budget_collection.update_one(
@@ -100,6 +131,18 @@ def budget_tracker():
     spending_limit = parse_float(budget_doc.get("spending_limit"))
     monthly_income = parse_float(budget_doc.get("monthly_income"))
     account_balance = parse_float(budget_doc.get("account_balance"))
+
+    # Find existing monthly income transaction date for this month
+    month_start_check = datetime(selected_year_int, selected_month_int, 1)
+    month_end_check = datetime(selected_year_int + 1, 1, 1) if selected_month_int == 12 else datetime(selected_year_int, selected_month_int + 1, 1)
+    existing_income_tx = spending_collection.find_one({
+        "user_id": session["user_id"],
+        "type": "income",
+        "category": "Salary",
+        "description": "Monthly Income",
+        "date": {"$gte": month_start_check, "$lt": month_end_check}
+    })
+    income_date = existing_income_tx["date"].strftime("%Y-%m-%d") if existing_income_tx else f"{selected_year_int}-{str(selected_month_int).zfill(2)}-01"
 
     # Carry forward balance from previous month if not set
     if account_balance == 0.0:
@@ -207,5 +250,7 @@ def budget_tracker():
         current_budget=current_budget,
         spending_limit_spent=spending_limit_spent,
         spending_limit_remaining=spending_limit_remaining,
-        spending_limit_used_pct=spending_limit_used_pct
+        spending_limit_used_pct=spending_limit_used_pct,
+        income_date=income_date
     )
+    
