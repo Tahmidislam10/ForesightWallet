@@ -8,3 +8,19 @@ build/
 dist/
 *.egg-info/
 .env
+
+# JS/CSS maps
+*.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Pytest
+.pytest_cache/
+
+# Logs
+*.log
