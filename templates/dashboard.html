@@ -64,7 +64,7 @@
 
             {{ kpi("Starting Balance", "£" ~ "%.2f"|format(summary.account_balance), "From Budget Tracker", "#2563eb") }}
             {{ kpi("End Balance", "£" ~ "%.2f"|format(summary.real_balance), "After all transactions", "#2563eb") }}
-            {{ kpi("Net Salary", "£" ~ "%.2f"|format(summary.current_budget), "After deductions", "#2563eb") }}
+            {{ kpi("Net Effect", "£" ~ "%.2f"|format(summary.current_budget), "Income minus expenses & deductions", "#2563eb") }}
             {{ kpi("Projected Balance", "£" ~ "%.2f"|format(summary.projected_end_balance), "Estimated month end", "#2563eb") }}
             {{ kpi("Daily Burn Rate", "£" ~ summary.burn_rate, "Avg daily spend", "#2563eb") }}
             {{ kpi("Budget Used", summary.budget_usage_pct ~ "%", "£" ~ "%.2f"|format(summary.expense_total) ~ " of £" ~ "%.2f"|format(summary.spending_limit), "#dc2626") }}
@@ -88,16 +88,8 @@
     <div class="col-lg-5">
         <div class="card shadow-sm h-100 border-0">
 
-            <div class="card-header bg-white d-flex justify-content-between align-items-center border-0">
-                <h6 class="fw-semibold mb-0">Spending Log Totals</h6>
-
-                <select id="totalsMonthSelect" class="form-select form-select-sm w-auto" onchange="updateTotalsMonth()">
-                    {% for i in range(1, 13) %}
-                    <option value="{{ i }}" {% if totals_month == i %}selected{% endif %}>
-                        {{ month_names[i-1] }}
-                    </option>
-                    {% endfor %}
-                </select>
+            <div class="card-header bg-white border-0">
+                <h6 class="fw-semibold mb-0">Connected Totals</h6>
             </div>
 
             <div class="card-body">
@@ -105,16 +97,18 @@
                     <span class="text-muted small">Income Added</span>
                     <span class="fw-semibold text-success">£{{ "%.2f"|format(income_total) }}</span>
                 </div>
-
                 <div class="d-flex justify-content-between py-2 border-bottom">
                     <span class="text-muted small">Expenses Deducted</span>
-                    <span class="fw-semibold text-danger">£{{ "%.2f"|format(expense_total) }}</span>
+                    <span class="fw-semibold text-danger">- £{{ "%.2f"|format(expense_total) }}</span>
                 </div>
-
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted small">Planned Deductions</span>
+                    <span class="fw-semibold text-danger">- £{{ "%.2f"|format(summary.planned_deductions) }}</span>
+                </div>
                 <div class="d-flex justify-content-between py-2">
                     <span class="fw-semibold small">Net Effect</span>
-                    <span class="fw-semibold {% if net_total < 0 %}text-danger{% else %}text-success{% endif %}">
-                        £{{ "%.2f"|format(net_total) }}
+                    <span class="fw-semibold {% if summary.current_budget < 0 %}text-danger{% else %}text-success{% endif %}">
+                        £{{ "%.2f"|format(summary.current_budget) }}
                     </span>
                 </div>
             </div>

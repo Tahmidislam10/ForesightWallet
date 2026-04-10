@@ -1,8 +1,26 @@
+html.dark-mode-early,
 html.dark-mode-early body,
-html.dark-mode-early {
+html.dark-mode-early .sidebar,
+html.dark-mode-early .navbar,
+html.dark-mode-early .card,
+html.dark-mode-early .main-content {
     background-color: #0f172a !important;
+    color: #e2e8f0 !important;
 }
 
+html.dark-mode-early .sidebar {
+    background-color: #1e293b !important;
+    border-right-color: #334155 !important;
+}
+
+html.dark-mode-early .navbar {
+    background-color: #1e293b !important;
+}
+
+html.dark-mode-early .card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
 :root {
     --primary-blue: #1e3a8a;    /* royal blue */
     --primary-blue-light: #e0e7ff;
@@ -76,7 +94,24 @@ body {
 }
 
 .sidebar a.active {
-    background: var(--primary-blue);
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+}
+
+.sidebar a.active i {
+    color: white;
+}
+
+.sidebar a.active::after {
+    content: '›';
+    margin-left: auto;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.sidebar a.active:hover {
+    background: #1d4ed8;
     color: white;
 }
 

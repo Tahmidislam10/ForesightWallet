@@ -33,15 +33,15 @@
             <!-- MAIN -->
             <div class="sidebar-section">
                 <p class="sidebar-title">MAIN</p>
-                <a href="/dashboard">
+                <a href="/dashboard" class="{{ 'active' if active_page == 'dashboard' else '' }}">
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="/spending-log">
+                <a href="/spending-log" class="{{ 'active' if active_page == 'spending' else '' }}">
                     <i class="bi bi-wallet2"></i>
                     <span>Spending Log</span>
                 </a>
-                <a href="/budget-tracker">
+                <a href="/budget-tracker" class="{{ 'active' if active_page == 'budget' else '' }}">
                     <i class="bi bi-pie-chart"></i>
                     <span>Budget Tracker</span>
                 </a>
@@ -50,24 +50,23 @@
             <!-- INSIGHTS -->
             <div class="sidebar-section">
                 <p class="sidebar-title">INSIGHTS</p>
-                <a href="/spending-trends">
+                <a href="/spending-trends" class="{{ 'active' if active_page == 'spending_trends' else '' }}">
                     <i class="bi bi-graph-down"></i>
                     <span>Spending Trends</span>
                 </a>
-                <a href="/income-trends">
+                <a href="/income-trends" class="{{ 'active' if active_page == 'income_trends' else '' }}">
                     <i class="bi bi-graph-up-arrow"></i>
                     <span>Income Trends</span>
                 </a>
-                <a href="/planned-deductions">
+                <a href="/planned-deductions" class="{{ 'active' if active_page == 'planned_deductions' else '' }}">
                     <i class="bi bi-cash-stack"></i>
                     <span>Planned Deductions</span>
                 </a>
-                <a href="/feedback">
+                <a href="/feedback" class="{{ 'active' if active_page == 'feedback' else '' }}">
                     <i class="bi bi-chat-left-text"></i>
                     <span>Personalised Feedback</span>
                 </a>
-                
-                <a href="/insights">
+                <a href="/insights" class="{{ 'active' if active_page == 'prediction' else '' }}">
                     <i class="bi bi-graph-up"></i>
                     <span>Prediction</span>
                 </a>
@@ -76,7 +75,7 @@
             <!-- FINANCIAL RISK -->
             <div class="sidebar-section">
                 <p class="sidebar-title">FINANCIAL RISK</p>
-                <a href="/risk">
+                <a href="/risk" class="{{ 'active' if active_page == 'risk' else '' }}">
                     <i class="bi bi-shield-exclamation"></i>
                     <span>Financial Risk Indicator</span>
                 </a>

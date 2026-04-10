@@ -60,4 +60,5 @@ def planned_deductions():
         summary_6m=summary_6m,
         summary_12m=summary_12m,
         summary_by_year=summary_by_year,
+        active_page="planned_deductions",
     )

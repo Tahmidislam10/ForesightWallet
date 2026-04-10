@@ -137,4 +137,5 @@ def spending_trends():
         current_year_labels=current_year_labels,
         current_year_expenses=current_year_expenses,
         current_year_avg=current_year_avg,
+        active_page="spending_trends",
     )

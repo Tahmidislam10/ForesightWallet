@@ -257,12 +257,11 @@ def calculate_month_summary(user_id, year, month):
     debts_total = round(sum(debts.values()), 2)
     planned_deductions = savings_total + bills_total + debts_total
 
-    starting_budget = monthly_income
     net_spending_log = income_total - expense_total
-    current_budget = starting_budget - planned_deductions + net_spending_log
+    current_budget = net_spending_log - planned_deductions
 
     # Real balance calculation
-    real_balance = round(account_balance + monthly_income + income_total - expense_total - planned_deductions, 2)
+    real_balance = round(account_balance + income_total - expense_total - planned_deductions, 2)
 
     today = datetime.utcnow()
     days_passed = today.day if (today.month == month and today.year == year) else calendar.monthrange(year, month)[1]
@@ -270,7 +269,7 @@ def calculate_month_summary(user_id, year, month):
     burn_rate = round(expense_total / days_passed, 2) if days_passed > 0 and expense_total > 0 else 0
     projected_expense = round(burn_rate * total_days, 2)
     has_data = monthly_income > 0 or account_balance > 0 or expense_total > 0
-    projected_end_balance = round(account_balance + monthly_income + income_total - planned_deductions - projected_expense, 2) if has_data else 0.0
+    projected_end_balance = round(account_balance + income_total - planned_deductions - projected_expense, 2) if has_data else 0.0
     budget_usage_pct = (expense_total / spending_limit) * 100 if spending_limit > 0 else 0
 
     spending_limit_remaining = round(spending_limit - expense_total, 2)

@@ -71,15 +71,15 @@ def dashboard():
 
     summary = calculate_month_summary(user_id, kpi_year, kpi_month)
 
-    if totals_month == 12:
-        totals_anchor = datetime(totals_year + 1, 1, 1)
+    if kpi_month == 12:
+        kpi_totals_anchor = datetime(kpi_year + 1, 1, 1)
     else:
-        totals_anchor = datetime(totals_year, totals_month + 1, 1)
-    totals_start = datetime(totals_year, totals_month, 1)
+        kpi_totals_anchor = datetime(kpi_year, kpi_month + 1, 1)
+    kpi_totals_start = datetime(kpi_year, kpi_month, 1)
 
     totals_transactions = list(spending_collection.find({
         "user_id": user_id,
-        "date": {"$gte": totals_start, "$lt": totals_anchor}
+        "date": {"$gte": kpi_totals_start, "$lt": kpi_totals_anchor}
     }))
     income_total = round(sum(t["amount"] for t in totals_transactions if t.get("type") == "income"), 2)
     expense_total = round(sum(t["amount"] for t in totals_transactions if t.get("type") == "expense"), 2)
@@ -178,4 +178,5 @@ def dashboard():
         greeting=greeting,
         month_names=month_names,
         today=now.strftime("%A, %d %B %Y"),
+        active_page="dashboard",
     )

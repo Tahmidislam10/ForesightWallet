@@ -6,6 +6,25 @@ from helpers import parse_float, normalize_section, get_prev_month_template, ded
 
 budget_bp = Blueprint("budget", __name__)
 
+@budget_bp.route("/api/prev-month-balance")
+def prev_month_balance():
+    from flask import jsonify
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    from helpers import calculate_month_summary
+    year = int(request.args.get("year"))
+    month = int(request.args.get("month"))
+
+    # Get previous month
+    if month == 1:
+        prev_year, prev_month = year - 1, 12
+    else:
+        prev_year, prev_month = year, month - 1
+
+    summary = calculate_month_summary(session["user_id"], prev_year, prev_month)
+    return jsonify({"end_balance": summary["real_balance"]})
+
 
 @budget_bp.route("/budget-tracker", methods=["GET", "POST"])
 def budget_tracker():
@@ -104,6 +123,17 @@ def budget_tracker():
                 }},
                 upsert=True
             )
+            # Also delete the auto-logged monthly income transaction
+            spending_collection.delete_one({
+                "user_id": session["user_id"],
+                "type": "income",
+                "category": "Salary",
+                "description": "Monthly Income",
+                "date": {
+                    "$gte": datetime(form_year_int, form_month_int, 1),
+                    "$lt": datetime(form_year_int + 1, 1, 1) if form_month_int == 12 else datetime(form_year_int, form_month_int + 1, 1)
+                }
+            })
 
         elif action in ("save_savings", "save_bills", "save_debts"):
             field = {"save_savings": "savings", "save_bills": "bills", "save_debts": "debts"}[action]
@@ -176,11 +206,11 @@ def budget_tracker():
             "date": {"$gte": prev_month_start, "$lt": prev_month_end}
         }))
 
-        prev_income_log = sum(t["amount"] for t in prev_transactions if t.get("type") == "income")
+        prev_income_log = sum(t["amount"] for t in prev_transactions if t.get("type") == "income" and not (t.get("category") == "Salary" and t.get("description") == "Monthly Income"))
         prev_expense_log = sum(t["amount"] for t in prev_transactions if t.get("type") == "expense")
 
         account_balance = round(
-            prev_balance + prev_income + prev_income_log - prev_expense_log - prev_deductions, 2
+            prev_balance + prev_income_log - prev_expense_log, 2
         )
 
     raw_savings = budget_doc.get("savings")
@@ -219,7 +249,7 @@ def budget_tracker():
 
     starting_budget = round(monthly_income, 2)
     net_spending_log = round(month_income_total - month_expense_total, 2)
-    current_budget = round(starting_budget - planned_deductions + net_spending_log, 2)
+    current_budget = round(net_spending_log - planned_deductions, 2)
     spending_limit_spent = round(month_expense_total, 2)
     spending_limit_remaining = round(spending_limit - spending_limit_spent, 2)
     spending_limit_used_pct = round((spending_limit_spent / spending_limit) * 100, 1) if spending_limit > 0 else 0.0
@@ -251,6 +281,8 @@ def budget_tracker():
         spending_limit_spent=spending_limit_spent,
         spending_limit_remaining=spending_limit_remaining,
         spending_limit_used_pct=spending_limit_used_pct,
-        income_date=income_date
+        income_date=income_date,
+        active_page="budget"
     )
+    
     

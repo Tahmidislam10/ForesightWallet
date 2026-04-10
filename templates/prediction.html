@@ -60,6 +60,11 @@
 
         {% if forecast_analysed %}
 
+        {% if prediction_data.history_warning and not prediction_data.predicted_total %}
+        <div class="alert alert-warning mb-3">
+            ⚠ {{ prediction_data.history_warning }}
+        </div>
+        {% else %}
         {% if prediction_data.history_warning %}
         <div class="alert alert-warning mb-3">
             ⚠ {{ prediction_data.history_warning }}
@@ -129,6 +134,7 @@
             Predictions are estimations only and do not constitute financial advice.
         </p>
 
+        {% endif %}
         {% endif %}
     </div>
 </div>
@@ -313,7 +319,7 @@
     </div>
 </div>
 
-{% if forecast_analysed %}
+{% if forecast_analysed and prediction_data.actual_labels is defined %}
 <script id="forecast-data" type="application/json">
 {{ {
     "actualLabels": prediction_data.actual_labels,

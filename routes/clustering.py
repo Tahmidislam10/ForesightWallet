@@ -209,4 +209,5 @@ def clustering():
         category_data={},
         category_analysed=False,
         category_scope=1,
+        active_page="prediction",
     )

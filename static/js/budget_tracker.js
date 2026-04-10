@@ -76,3 +76,21 @@ document.querySelectorAll(".remove-row").forEach(btn => {
         this.closest("tr").remove();
     });
 });
+
+function carryForwardBalance() {
+    const yearEl = document.querySelector("input[name='year']");
+    const monthEl = document.querySelector("input[name='month']");
+    const year = yearEl ? yearEl.value : new Date().getFullYear();
+    const month = monthEl ? monthEl.value : new Date().getMonth() + 1;
+
+    fetch(`/api/prev-month-balance?year=${year}&month=${month}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.end_balance !== undefined) {
+                document.getElementById("accountBalanceInput").value = data.end_balance.toFixed(2);
+            } else {
+                alert("Could not fetch previous month balance.");
+            }
+        })
+        .catch(() => alert("Error fetching balance."));
+}

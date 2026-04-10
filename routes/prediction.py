@@ -155,7 +155,16 @@ def insights():
         history_warning = None
 
         if months_available == 0:
-            history_warning = "No historical spending data found. Using dataset average as fallback."
+            return render_template("prediction.html",
+                active_feature=active_feature,
+                prediction_data={"history_warning": "No historical spending data found. Please log at least 1 month of expenses before running a prediction."},
+                forecast_analysed=True,
+                forecast_scope=forecast_scope,
+                category_data={},
+                category_analysed=False,
+                category_scope=1,
+                active_page="prediction",
+            )
         elif months_available < forecast_scope:
             history_warning = (
                 f"Only {months_available} month(s) of history found but you selected "
@@ -181,12 +190,6 @@ def insights():
             print("=" * 60)
         else:
             predicted_ratio = kaggle_avg_ratio
-            history_warning = "No spending data found for this month. Using dataset average as fallback."
-            print("=" * 60)
-            print("ML MODEL SKIPPED — No current spending data, using Kaggle fallback")
-            print(f"Kaggle avg ratio: {kaggle_avg_ratio}")
-            print(f"Kaggle avg total: {kaggle_avg_total}")
-            print("=" * 60)
 
         scope_base_totals = []
         for i in range(1, forecast_scope + 1):
@@ -200,7 +203,7 @@ def insights():
         elif current_total > 0:
             base_total = current_total
         else:
-            base_total = kaggle_avg_total
+            base_total = 0
 
         predicted_total = round(base_total * predicted_ratio, 2)
         print(f"Base total used: £{base_total:.2f}")
@@ -299,4 +302,5 @@ def insights():
         category_data={},
         category_analysed=False,
         category_scope=1,
+        active_page="prediction",
     )

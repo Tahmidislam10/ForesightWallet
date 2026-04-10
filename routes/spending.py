@@ -94,7 +94,8 @@ def spending_log():
         income_chart_labels=income_chart_labels,
         income_chart_values=income_chart_values,
         active_filter=filter_option,
-        active_month=month_option
+        active_month=month_option,
+        active_page="spending"
     )
 
 
