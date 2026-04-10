@@ -6,6 +6,8 @@ from helpers import parse_float, normalize_section, get_prev_month_template, ded
 
 budget_bp = Blueprint("budget", __name__)
 
+
+# API endpoint returns previous month's end balance for carry forward button
 @budget_bp.route("/api/prev-month-balance")
 def prev_month_balance():
     from flask import jsonify
@@ -25,7 +27,7 @@ def prev_month_balance():
     summary = calculate_month_summary(session["user_id"], prev_year, prev_month)
     return jsonify({"end_balance": summary["real_balance"]})
 
-
+# Main budget tracker handles viewing and saving spending limits income savings, bills and debts
 @budget_bp.route("/budget-tracker", methods=["GET", "POST"])
 def budget_tracker():
     if "user_id" not in session:

@@ -13,6 +13,7 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
 
 
+# Register new user with email and password
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -32,6 +33,7 @@ def register():
     return render_template("register.html")
 
 
+# Log in existing user with email and password
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -43,6 +45,7 @@ def login():
     return render_template("login.html")
 
 
+# Start Google OAuth login flow
 @auth_bp.route("/google-login")
 def google_login():
     redirect_uri = url_for("auth.google_callback", _external=True)
@@ -52,6 +55,8 @@ def google_login():
     return redirect(authorization_url)
 
 
+
+# Handle Google OAuth callback and create/update user
 @auth_bp.route("/google/callback")
 def google_callback():
     try:
@@ -86,7 +91,7 @@ def google_callback():
         print(f"Google auth error: {e}")
         return redirect("/login")
 
-
+# Log out user and clear session
 @auth_bp.route("/logout")
 def logout():
     session.pop("user_id", None)
