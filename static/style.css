@@ -1183,3 +1183,76 @@ body.dark-mode #wwInput:focus {
     cursor: pointer;
 }
 .login-btn:hover { background: #1d4ed8; color: white; }
+
+
+/* ============================================================
+   MOBILE RESPONSIVENESS
+   ============================================================ */
+
+#sidebarOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1040;
+}
+
+#sidebarOverlay.active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        width: 260px !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+    }
+
+    .sidebar .sidebar-title,
+    .sidebar span,
+    .sidebar .logo {
+        display: block !important;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    .content-wrapper {
+        padding: 0 12px 24px;
+    }
+
+    .navbar {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .navbar .fw-semibold {
+        max-width: 100px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar .fw-semibold {
+        display: none;
+    }
+}
+
+body.dark-mode #sidebarOverlay {
+    background: rgba(0, 0, 0, 0.65);
+}
