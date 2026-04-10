@@ -41,7 +41,7 @@ def login():
         if user and user.get("password") and bcrypt.check_password_hash(user["password"], request.form["password"]):
             session["user_id"] = str(user["_id"])
             return redirect("/dashboard")
-        return "Invalid email or password"
+        return render_template("login.html", error="Invalid email or password")
     return render_template("login.html")
 
 
