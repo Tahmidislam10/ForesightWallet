@@ -10,7 +10,7 @@ df = pd.read_csv(os.path.join(BASE_DIR, "budgetwise_finance_dataset.csv"))
 
 print(f"Raw dataset shape: {df.shape}")
 
-# ── Clean column names ──
+# Clean column names
 df.columns = df.columns.str.strip().str.lower()
 df = df[["user_id", "date", "transaction_type", "category", "amount"]]
 df["transaction_type"] = df["transaction_type"].str.strip().str.title()
@@ -23,7 +23,7 @@ df = df.dropna(subset=["date"])
 df["year"] = df["date"].dt.year
 df["month"] = df["date"].dt.month
 
-# ── Standardise categories ──
+# Standardise categories
 category_map = {
     "food": "Food", "foods": "Food", "fod": "Food",
     "food & drink": "Food", "food and drink": "Food",
@@ -44,7 +44,7 @@ df["category"] = df["category"].str.strip().str.lower().map(
     lambda x: category_map.get(x, x.title()) if isinstance(x, str) else "Other"
 )
 
-# ── Build user-level features ──
+# Build user-level features ──
 # For clustering we aggregate across ALL months per user
 # to get their overall spending profile
 records = []
@@ -81,7 +81,7 @@ for user_id, g in df.groupby("user_id"):
 user_profiles = pd.DataFrame(records)
 print(f"\nUser profiles built: {len(user_profiles)}")
 
-# ── Features for clustering ──
+# Features for clustering 
 feature_cols = [
     "food_pct", "rent_pct", "entertainment_pct", "shopping_pct",
     "health_pct", "travel_pct", "utilities_pct", "education_pct",
@@ -90,11 +90,11 @@ feature_cols = [
 
 X = user_profiles[feature_cols].fillna(0)
 
-# ── Scale features ──
+# Scale features 
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# ── Elbow method — find optimal K ──
+# Elbow method — find optimal K 
 from sklearn.metrics import silhouette_score
 
 inertias = []
@@ -119,17 +119,17 @@ best_k = K_range[silhouette_scores.index(max(silhouette_scores))]
 print(f"\nBest K by silhouette: {best_k}")
 print(f"Chosen K=3 for interpretability (Saver / Balanced / Leisure-Heavy)")
 
-# ── K-Means with 3 clusters ──
+#  K-Means with 3 clusters 
 kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
 kmeans.fit(X_scaled)
 user_profiles["cluster"] = kmeans.labels_
 
-# ── Final silhouette score for K=3 ──
+#  Final silhouette score for K=3 
 final_silhouette = silhouette_score(X_scaled, kmeans.labels_)
 print(f"\nFinal Silhouette Score (K=3): {final_silhouette:.4f}")
 print("(Score closer to 1.0 = well-separated clusters, >0.3 = acceptable)")
 
-# ── Analyse clusters to assign labels ──
+#  Analyse clusters to assign labels
 cluster_summary = user_profiles.groupby("cluster")[feature_cols].mean()
 print("\nCluster centres:")
 print(cluster_summary.round(3))
@@ -169,7 +169,7 @@ cluster_counts = user_profiles["cluster"].value_counts()
 for c, label in cluster_labels.items():
     print(f"  Cluster {c} ({label}): {cluster_counts[c]} users")
 
-# ── Save ──
+# Save
 joblib.dump(kmeans, os.path.join(BASE_DIR, "kmeans_model.pkl"))
 joblib.dump(scaler, os.path.join(BASE_DIR, "kmeans_scaler.pkl"))
 joblib.dump(feature_cols, os.path.join(BASE_DIR, "kmeans_feature_cols.pkl"))

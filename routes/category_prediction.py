@@ -237,5 +237,8 @@ def category_prediction():
         prediction_data={},
         forecast_analysed=False,
         forecast_scope=1,
+        clustering_data={},
+        clustering_analysed=False,
+        clustering_scope=1,
         active_page="prediction",
     )

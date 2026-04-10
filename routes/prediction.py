@@ -163,6 +163,9 @@ def insights():
                 category_data={},
                 category_analysed=False,
                 category_scope=1,
+                clustering_data={},
+                clustering_analysed=False,
+                clustering_scope=1,
                 active_page="prediction",
             )
         elif months_available < forecast_scope:
@@ -302,5 +305,8 @@ def insights():
         category_data={},
         category_analysed=False,
         category_scope=1,
+        clustering_data={},
+        clustering_analysed=False,
+        clustering_scope=1,
         active_page="prediction",
     )

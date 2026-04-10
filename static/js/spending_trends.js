@@ -108,7 +108,7 @@ var yearChart = new ApexCharts(document.querySelector("#yearChart"), {
     series: [{ name: 'Expenses', data: yearExpenses }],
     xaxis: { categories: yearLabels, title: { text: "Month" }, labels: { style: { fontSize: '11px' } } },
     yaxis: { min: 0, title: { text: "Amount (£)" }, labels: { formatter: val => "£" + val.toFixed(2) } },
-    colors: ['#a78bfa'],
+    colors: ['#3b82f6'],
     plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
     annotations: {
         yaxis: [{ y: yearMonthlyAvg, borderColor: '#f97316', strokeDashArray: 6, borderWidth: 2,

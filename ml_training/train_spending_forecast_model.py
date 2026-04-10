@@ -12,28 +12,28 @@ df = pd.read_csv(os.path.join(BASE_DIR, "budgetwise_finance_dataset.csv"))
 print(f"Raw dataset shape: {df.shape}")
 print(f"Columns: {df.columns.tolist()}")
 
-# ── Clean column names ──
+# Clean column names 
 df.columns = df.columns.str.strip().str.lower()
 
-# ── Keep only needed columns ──
+# Keep only needed columns 
 df = df[["user_id", "date", "transaction_type", "category", "amount"]]
 
-# ── Clean transaction_type ──
+# Clean transaction_type 
 df["transaction_type"] = df["transaction_type"].str.strip().str.title()
 df = df[df["transaction_type"].isin(["Income", "Expense"])]
 
-# ── Clean amount ──
+# Clean amount 
 df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
 df = df.dropna(subset=["amount"])
 df = df[(df["amount"] > 0) & (df["amount"] < 500000)]
 
-# ── Parse dates — handle multiple formats ──
+# Parse dates — handle multiple formats 
 df["date"] = pd.to_datetime(df["date"], errors="coerce", dayfirst=False)
 df = df.dropna(subset=["date"])
 df["year"] = df["date"].dt.year
 df["month"] = df["date"].dt.month
 
-# ── Standardise categories ──
+#  Standardise categories
 category_map = {
     # Food variants
     "food": "Food", "foods": "Food", "fod": "Food",
@@ -70,7 +70,7 @@ print(f"Unique users: {df['user_id'].nunique()}")
 print(f"Transaction types:\n{df['transaction_type'].value_counts()}")
 print(f"\nTop categories:\n{df['category'].value_counts().head(10)}")
 
-# ── Engineer monthly features per user ──
+# Engineer monthly features per user 
 def get_category_sum(g, cat):
     return g[(g["transaction_type"] == "Expense") & (g["category"] == cat)]["amount"].sum()
 
@@ -107,7 +107,7 @@ monthly = monthly.sort_values(["user_id", "year", "month"]).reset_index(drop=Tru
 print(f"\nTotal user-month records: {len(monthly)}")
 print(f"Unique users with data: {monthly['user_id'].nunique()}")
 
-# ── Add lag and rolling features per user ──
+# Add lag and rolling features per user 
 monthly["lag_1"] = monthly.groupby("user_id")["total_expenses"].shift(1)
 monthly["lag_2"] = monthly.groupby("user_id")["total_expenses"].shift(2)
 monthly["rolling_3m"] = monthly.groupby("user_id")["total_expenses"].transform(
@@ -120,11 +120,11 @@ monthly["income_trend"] = monthly.groupby("user_id")["total_income"].transform(
     lambda x: x - x.shift(3).fillna(x.mean())
 )
 
-# ── Target: next month spending ratio per user ──
+#  Target: next month spending ratio per user 
 monthly["next_month_expenses"] = monthly.groupby("user_id")["total_expenses"].shift(-1)
 monthly["spending_ratio"] = monthly["next_month_expenses"] / monthly["total_expenses"]
 
-# ── Remove unstable ratios ──
+# Remove unstable ratios 
 monthly = monthly[
     (monthly["spending_ratio"] >= 0.5) &
     (monthly["spending_ratio"] <= 2.0) &
@@ -136,13 +136,13 @@ print(f"Spending ratio range: {monthly['spending_ratio'].min():.3f} — {monthly
 print(f"Mean ratio: {monthly['spending_ratio'].mean():.3f}")
 print(f"Std ratio: {monthly['spending_ratio'].std():.3f}")
 
-# ── Save fallback values ──
+#  Save fallback values 
 kaggle_avg_ratio = round(monthly["spending_ratio"].mean(), 4)
 kaggle_avg_total = round(monthly["total_expenses"].mean(), 2)
 print(f"\nFallback avg ratio: {kaggle_avg_ratio:.4f}")
 print(f"Fallback avg total: £{kaggle_avg_total:.2f}")
 
-# ── Features ──
+# Features
 feature_cols = [
     "total_expenses", "total_income",
     "food", "rent", "entertainment", "shopping",
@@ -155,14 +155,14 @@ feature_cols = [
 X = monthly[feature_cols]
 y = monthly["spending_ratio"]
 
-# ── Time-based split ──
+# Time-based split 
 split_idx = int(len(monthly) * 0.8)
 X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
 y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
 print(f"\nTraining on {len(X_train)} records, testing on {len(X_test)} records")
 
-# ── Random Forest Regressor ──
+# Random Forest Regressor
 model = RandomForestRegressor(
     n_estimators=200,
     max_depth=6,
@@ -172,14 +172,14 @@ model = RandomForestRegressor(
 model.fit(X_train, y_train)
 y_pred = np.clip(model.predict(X_test), 0.5, 2.0)
 
-# ── Evaluation ──
+# Evaluation 
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
 print(f"\nRandom Forest — Time-Based Split:")
 print(f"Test MAE: {mae:.4f} (ratio units)")
 print(f"Test R²: {r2:.4f}")
 
-# ── Time Series CV ──
+# Time Series CV
 tscv = TimeSeriesSplit(n_splits=5)
 cv_r2_scores = []
 cv_mae_scores = []
@@ -204,13 +204,13 @@ print(f"\nTime Series CV (5 folds):")
 print(f"CV R²: {cv_r2:.4f} (+/- {np.std(cv_r2_scores):.4f})")
 print(f"CV MAE: {cv_mae:.4f}")
 
-# ── Feature importances ──
+# Feature importances 
 print("\nFeature Importances:")
 for feat, imp in sorted(zip(feature_cols, model.feature_importances_), key=lambda x: -x[1]):
     if imp > 0.01:
         print(f"  {feat}: {imp:.3f}")
 
-# ── Save ──
+# Save 
 joblib.dump(model, os.path.join(BASE_DIR, "spending_forecast_model.pkl"))
 joblib.dump(feature_cols, os.path.join(BASE_DIR, "forecast_feature_cols.pkl"))
 joblib.dump(kaggle_avg_ratio, os.path.join(BASE_DIR, "kaggle_avg_ratio.pkl"))
