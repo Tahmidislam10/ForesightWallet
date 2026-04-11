@@ -1,13 +1,12 @@
 
-Project    : Forsight wallet
-Created by : Tahmid Islam
-Course     : BSc Computer Science | City, University of London
+Project    : Foresight Wallet
+Developer  : Tahmid Islam
+Course     : BSc Computer Science, City University of London
 Live URL   : https://foresightwallet.onrender.com
 GitHub     : https://github.com/Tahmidislam10/ForesightWallet
 
-================================================================================
+
 TABLE OF CONTENTS
-================================================================================
 
   1. Environment Setup
   2. Installation
@@ -17,16 +16,14 @@ TABLE OF CONTENTS
   6. Project Objectives Met
   7. Deployed Version
 
-================================================================================
+
 1. ENVIRONMENT SETUP
-================================================================================
 
 Before running the project, create a .env file in the root folder and add the
 following keys. Follow the setup instructions below for each one.
 
---------------------------------------------------------------------------------
+
 SETTING UP MONGODB
---------------------------------------------------------------------------------
 
 Option 1: Local MongoDB
 
@@ -55,18 +52,16 @@ Option 2: MongoDB Atlas (Cloud - Free)
   8. Add this to your .env file:
      MONGO_URI=mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/foresightwallet
 
---------------------------------------------------------------------------------
+
 SETTING UP SECRET KEY
---------------------------------------------------------------------------------
 
 Flask uses this to sign and encrypt session cookies to keep users logged in
 securely. Add any random string to your .env file:
 
   SECRET_KEY=foresightwallet2026
 
---------------------------------------------------------------------------------
+
 SETTING UP GEMINI API KEY
---------------------------------------------------------------------------------
 
 The WalletWise AI chatbot uses Google's Gemini API (gemini-2.5-flash-lite model).
 
@@ -78,9 +73,8 @@ The WalletWise AI chatbot uses Google's Gemini API (gemini-2.5-flash-lite model)
 
 Note: The free tier of Google AI Studio is sufficient to run this project.
 
---------------------------------------------------------------------------------
+
 SETTING UP GOOGLE OAUTH
---------------------------------------------------------------------------------
 
 Google OAuth allows users to sign in with their Google account.
 
@@ -95,14 +89,13 @@ Google OAuth allows users to sign in with their Google account.
   6. Set Application type to Web application
   7. Under Authorised redirect URIs add:
      http://localhost:5000/google/callback
-  8. Click Create — you will receive a Client ID and Client Secret
+  8. Click Create, you will receive a Client ID and Client Secret
   9. Add both to your .env file:
      GOOGLE_CLIENT_ID=your_client_id_here
      GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 
-================================================================================
+
 2. INSTALLATION
-================================================================================
 
   1. Clone the repository:
      git clone https://github.com/Tahmidislam10/ForesightWallet.git
@@ -132,7 +125,6 @@ Google OAuth allows users to sign in with their Google account.
   7. Open your browser and go to:
      http://127.0.0.1:5000
 
-
 To run the application again after initial setup:
 
      venv\Scripts\activate
@@ -140,9 +132,8 @@ To run the application again after initial setup:
 
 Then open http://127.0.0.1:5000
 
-================================================================================
+
 3. FOLDER STRUCTURE
-================================================================================
 
 ForesightWallet/
 ├── app.py                          # Flask app factory, registers all blueprints
@@ -201,9 +192,8 @@ ForesightWallet/
     ├── login.html                  # Login page
     └── register.html               # Register page
 
-================================================================================
+
 4. TECH STACK
-================================================================================
 
   Backend        : Python 3.10, Flask 3.0.2
   Templating     : Jinja2
@@ -216,9 +206,8 @@ ForesightWallet/
   Deployment     : Render (gunicorn 21.2.0)
   PDF Export     : jsPDF, html2canvas
 
-================================================================================
+
 5. FEATURE OVERVIEW
-================================================================================
 
   Dashboard                  : KPI cards showing starting balance, end balance,
                                net effect, projected balance, daily burn rate
@@ -240,8 +229,8 @@ ForesightWallet/
   Planned Deductions         : Track recurring savings, bills and debt payments
                                over time with breakdown charts
 
-  Personalised Feedback      : Rule-based spending tips generated from your
-                               actual transaction categories each month
+  Personalised Feedback      : Rule-based spending tips generated from actual
+                               transaction categories each month
 
   ML Spending Forecast       : Random Forest model predicts whether you will
                                exceed your budget in the next 30 days
@@ -249,7 +238,7 @@ ForesightWallet/
   Top Category Prediction    : Predicts which spending category will be highest
                                next month
 
-  Spending Behaviour         : K-Means model classifies your spending behaviour
+  Spending Behaviour         : K-Means model classifies spending behaviour
   Clustering                   as Saver, Balanced or Leisure-Heavy
 
   Financial Risk Indicator   : Colour-coded risk score out of 100 based on
@@ -267,12 +256,10 @@ ForesightWallet/
                                trends, income trends, planned deductions and
                                prediction pages
 
-================================================================================
-6. PROJECT OBJECTIVES MET
-================================================================================
 
-CORE OBJECTIVES MET FROM PDD
-------------------------------
+6. PROJECT OBJECTIVES MET
+
+Core Objectives Met from PDD
 
   Sub-obj 1  : Wireframes for key pages                          Completed
   Sub-obj 2  : Web interface with sidebar and navigation         Completed
@@ -285,9 +272,7 @@ CORE OBJECTIVES MET FROM PDD
   Sub-obj 9  : Budget Tracker with spending limits and alerts    Completed
   Sub-obj 10 : Deployment on Render                              Completed
 
-
-ADDITIONAL FEATURES MET FROM PDD
-----------------------------------
+Additional Features Met from PDD
 
   Sub-obj 11 : PDF export for charts and summaries               Completed
   Sub-obj 12 : Rotating motivational quotes on dashboard         Completed
@@ -295,9 +280,7 @@ ADDITIONAL FEATURES MET FROM PDD
   Sub-obj 14 : Financial Risk Indicator with colour-coded meter  Completed
   Sub-obj 15 : Dark/Light mode toggle                            Completed
 
-
-BONUS FEATURES BEYOND PDD
----------------------------
+Bonus Features Beyond PDD
 
   Top Category Prediction    : Predicts which spending category will be highest next month
   WalletWise AI Chatbot      : Gemini-powered assistant for finance questions and live price lookups
@@ -305,11 +288,10 @@ BONUS FEATURES BEYOND PDD
   Planned Deductions         : Track recurring savings, bills and debt payments with history charts
   Income Trends              : Dedicated income tracking page with year overview charts
   Carry Forward Balance      : Automatically carry previous month end balance into next month
-  Mobile Responsive Design   : Full mobile responsiveness with slide-in sidebar drawer
+  Mobile Responsive Design   : mobile responsiveness with slide-in sidebar drawer
 
-================================================================================
+
 7. DEPLOYED VERSION
-================================================================================
 
 The application is live and accessible at:
 
@@ -320,5 +302,3 @@ URL above without any local setup.
 
 Note: The app is hosted on Render's free tier and may take 30-60 seconds to
 wake up on first load if it has been inactive.
-
-================================================================================
