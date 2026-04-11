@@ -117,7 +117,7 @@
             </div>
             <div class="col-12">
                 <label class="form-label text-muted small text-uppercase" style="letter-spacing:0.05em;">Current Account Balance (£)</label>
-                <small class="text-muted d-block mb-1">Enter your real bank balance or carry forward from last month.</small>
+                <small class="text-muted d-block mb-1">Enter your bank balance or carry forward from last month.</small>
                 <div class="d-flex gap-2 align-items-center">
                     <input type="number" name="account_balance" id="accountBalanceInput" class="form-control" min="0" step="0.01"
                         value="{{ '%.2f'|format(account_balance) }}">
@@ -183,7 +183,7 @@
                                         class="form-control form-control-sm text-end" value="{{ '%.2f'|format(val) }}">
                                 </td>
                                 <td class="edit-cell" style="display:none; width:40px;">
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-row">🗑</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -231,7 +231,7 @@
                                         class="form-control form-control-sm text-end" value="{{ '%.2f'|format(val) }}">
                                 </td>
                                 <td class="edit-cell" style="display:none; width:40px;">
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-row">🗑</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -279,7 +279,7 @@
                                         class="form-control form-control-sm text-end" value="{{ '%.2f'|format(val) }}">
                                 </td>
                                 <td class="edit-cell" style="display:none; width:40px;">
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-row">🗑</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button>
                                 </td>
                             </tr>
                             {% endfor %}
