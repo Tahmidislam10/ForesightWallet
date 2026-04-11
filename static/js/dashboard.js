@@ -54,7 +54,7 @@ renderDonut('#debtsDonut', deductionsRaw.debts, ['#dc2626', '#f87171', '#fca5a5'
 const barData = JSON.parse(document.getElementById("dashboard-bar-data").textContent);
 
 var barChart = new ApexCharts(document.querySelector("#incomeExpenseChart"), {
-    chart: { type: 'bar', height: 300, toolbar: { show: false } },
+    chart: { type: 'bar', height: 300, toolbar: { show: true, tools: { zoom: false, zoomin: false, zoomout: false, pan: false, reset: false, download: true } } },
     series: [
         { name: 'Income', data: barData.income },
         { name: 'Expenses', data: barData.expenses }
@@ -64,9 +64,40 @@ var barChart = new ApexCharts(document.querySelector("#incomeExpenseChart"), {
     colors: ['#1cc88a', '#e74a3b'],
     plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
     dataLabels: { enabled: false },
-    legend: { position: 'top', horizontalAlign: 'right' },
+    legend: { position: 'top', horizontalAlign: 'center' },
     tooltip: { y: { formatter: val => "£" + val.toFixed(2) } },
     grid: { borderColor: '#f1f5f9', strokeDashArray: 4 }
 });
 
-barChart.render();
+barChart.render().then(function() {
+    setTimeout(function() {
+        const menu = document.querySelector("#incomeExpenseChart .apexcharts-menu");
+        if (menu) {
+            const pdfItem = document.createElement("div");
+            pdfItem.className = "apexcharts-menu-item";
+            pdfItem.textContent = "Download PDF";
+            pdfItem.addEventListener("click", async function() {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+                    const pageW = doc.internal.pageSize.getWidth();
+                    const margin = 14;
+                    const el = document.getElementById("incomeExpenseChart");
+                    const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+                    const img = canvas.toDataURL("image/png");
+                    const chartW = pageW - margin * 2;
+                    const chartH = (canvas.height / canvas.width) * chartW;
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("Income vs Expenses", margin, margin);
+                    doc.addImage(img, "PNG", margin, margin + 5, chartW, Math.min(chartH, 80));
+                    doc.save("income_vs_expenses.pdf");
+                } catch(err) {
+                    console.error("PDF error:", err);
+                    alert("PDF generation failed. Please try again.");
+                }
+            });
+            menu.appendChild(pdfItem);
+        }
+    }, 500);
+});

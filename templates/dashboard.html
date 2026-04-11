@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <h2 class="mb-4">Dashboard</h2>
 
-<!-- ================= CLEAN HEADER ================= -->
+<!-- CLEAN HEADER  -->
 <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded border" style="background:#f8fafc;">
 
     <div>
@@ -29,7 +31,7 @@
 
 </div>
 
-<!-- ================= FINANCIAL OVERVIEW ================= -->
+<!--  FINANCIAL OVERVIEW  -->
 <div class="card shadow-sm mb-4 border-0">
     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-0">
         <h6 class="mb-0 fw-semibold">Financial Overview</h6>
@@ -81,7 +83,7 @@
     </div>
 </div>
 
-<!-- ================= MIDDLE SECTION ================= -->
+<!--  MIDDLE SECTION -->
 <div class="row g-4 mb-4">
 
     <!-- LEFT -->
@@ -155,7 +157,7 @@
 
 </div>
 
-<!-- ================= PLANNED DEDUCTIONS ================= -->
+<!--  PLANNED DEDUCTIONS  -->
 <div class="card shadow-sm mb-4 border-0">
     <div class="card-header bg-white d-flex justify-content-between align-items-center border-0">
         <h6 class="fw-semibold mb-0">Planned Deductions — {{ month_names[kpi_month-1] }}</h6>
@@ -179,7 +181,7 @@
     </div>
 </div>
 
-<!-- ================= CHART ================= -->
+<!--  CHART  -->
 <div class="card shadow-sm border-0">
     <div class="card-header bg-white border-0">
         <h6 class="fw-semibold mb-0">Income vs Expenses</h6>
@@ -200,7 +202,7 @@
 } | tojson }}
 </script>
 
-<!-- ================= DATA ================= -->
+<!--  DATA  -->
 <script id="dashboard-bar-data" type="application/json">
 {{ {
     "labels": bar_labels,

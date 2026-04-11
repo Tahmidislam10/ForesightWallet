@@ -32,14 +32,14 @@ html.dark-mode-early .card {
 }
 
 
-/* ===== GLOBAL ===== */
+/*  GLOBAL  */
 body {
     background-color: var(--background-light);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-/* ===== SIDEBAR ===== */
+/*  SIDEBAR  */
 .sidebar {
     width: 260px;
     background: var(--sidebar-bg);
@@ -143,14 +143,14 @@ body {
     margin-left: 80px;
 }
 
-/* ===== HERO SECTION ===== */
+/*  HERO SECTION */
 .hero-section {
     background: linear-gradient(180deg, #111 0%, #1c1c1c 100%);
     padding: 120px 0 100px 0;
     color: white;
 }
 
-/* ===== FEATURES SECTION ===== */
+/* FEATURES SECTION  */
 .features-section {
     background-color: #f5f5f5;
     padding: 80px 0 100px 0;
@@ -160,7 +160,7 @@ body {
     font-size: 45px;
 }
 
-/* ===== BUTTONS ===== */
+/* BUTTONS  */
 .btn-light {
     background-color: #ffffff;
     border: none;
@@ -186,7 +186,7 @@ body {
 }
 
 
-/* ===== LOGIN PAGE FIXED ===== */
+/* LOGIN PAGE FIXED  */
 
 .login-body {
     background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
@@ -275,14 +275,14 @@ body {
     z-index: 2;
 }
 
-/* ===== APP LAYOUT ===== */
+/*  APP LAYOUT  */
 .app-layout {
     display: flex;
     height: 100vh;
     overflow: hidden;
 }
 
-/* ===== SIDEBAR ===== */
+/*  SIDEBAR  */
 .sidebar {
     width: 260px;
     background: var(--sidebar-bg);
@@ -305,7 +305,7 @@ body {
     display: none;
 }
 
-/* ===== MAIN CONTENT ===== */
+/*  MAIN CONTENT  */
 .main-content {
     flex: 1;
     background: var(--background-light);
@@ -420,7 +420,7 @@ body {
     background-color: #f8fafc;
 }
 
-/* ===== DARK MODE ===== */
+/*  DARK MODE  */
 body.dark-mode {
     --background-light: #0f172a;
     --sidebar-bg: #1e293b;
@@ -848,7 +848,7 @@ body.dark-mode .card .text-muted { color: #94a3b8 !important; }
 body.dark-mode .badge { color: #ffffff !important; }
 
 
-/* ===== WALLETWISE CHAT (from base.html) ===== */
+/*  WALLETWISE CHAT (from base.html) */
 #wwButton {
     position: fixed;
     bottom: 28px;
@@ -1014,7 +1014,7 @@ body.dark-mode #wwInput:focus {
     background: #0f172a;
 }
 
-/* ===== LANDING PAGE (from landing.html) ===== */
+/*  LANDING PAGE (from landing.html) */
 .fw-nav {
     background: white;
     border-bottom: 1px solid #e2e8f0;
@@ -1131,7 +1131,7 @@ body.dark-mode #wwInput:focus {
     .fw-grid { grid-template-columns: 1fr; }
 }
 
-/* ===== AUTH PAGES - LOGIN & REGISTER (from login.html & register.html) ===== */
+/* AUTH PAGES - LOGIN & REGISTER (from login.html & register.html)  */
 .auth-body {
     background: #f1f3f5;
     font-family: 'Segoe UI', sans-serif;
@@ -1189,9 +1189,7 @@ body.dark-mode #wwInput:focus {
 .login-btn:hover { background: #1d4ed8; color: white; }
 
 
-/* ============================================================
-   MOBILE RESPONSIVENESS
-   ============================================================ */
+/* MOBILE RESPONSIVENESS*/
 
 #sidebarOverlay {
     display: none;
