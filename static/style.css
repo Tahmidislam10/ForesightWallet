@@ -1053,7 +1053,7 @@ body.dark-mode #wwInput:focus {
     background: #f1f3f5;
     border-bottom: 1px solid #e2e8f0;
     text-align: center;
-    padding: 36px 20px 32px;
+    padding: 20px 20px 18px;
     flex-shrink: 0;
 }
 .fw-hero h1 { color: #4e73df; font-size: 2.6rem; font-weight: 600; margin-bottom: 12px; }
@@ -1086,23 +1086,23 @@ body.dark-mode #wwInput:focus {
 .fw-hero-secondary:hover { background: #f8fafc; color: #0f172a; }
 .fw-features {
     background: #f1f3f5;
-    padding: 28px 40px 36px;
+    padding: 16px 40px 20px;
     flex: 1;
 }
 .fw-features-title { text-align: center; font-size: 1.35rem; font-weight: 600; color: #0f172a; margin-bottom: 6px; }
 .fw-features-sub { text-align: center; font-size: 1rem; color: #64748b; margin-bottom: 24px; }
 .fw-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 18px;
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 .fw-card {
     background: white;
     border-radius: 10px;
     border: 1px solid #e2e8f0;
-    padding: 24px 20px;
+    padding: 16px 16px;
 }
 .fw-card-icon { font-size: 26px; margin-bottom: 12px; color: #2563eb; }
 .fw-card-title { font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 6px; }
@@ -1111,10 +1111,11 @@ body.dark-mode #wwInput:focus {
     background: white;
     color: #4e73df;
     text-align: center;
-    padding: 20px;
+    padding: 12px 20px;
     font-size: 14px;
     border-top: 1px solid #e2e8f0;
     flex-shrink: 0;
+    margin-top: auto;
 }
 .fw-footer span { color: #4e73df; }
 @media (max-width: 768px) {
@@ -1122,6 +1123,9 @@ body.dark-mode #wwInput:focus {
     .fw-hero h1 { font-size: 2rem; }
     .fw-nav { padding: 12px 16px; }
     .fw-btn-outline, .fw-btn-solid { padding: 7px 12px; font-size: 13px; }
+}
+@media (max-width: 480px) {
+    .fw-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
     .fw-grid { grid-template-columns: 1fr; }
