@@ -1,118 +1,133 @@
-Project Name: Foresight Wallet
-Developer: Tahmid Islam 
-Live URL: https://foresightwallet.onrender.com
-Github: https://github.com/Tahmidislam10/ForesightWallet
+# Foresight Wallet
+**A Predictive Personal Finance Habit Tracker**
+**Developer:** Tahmid Islam | BSc Computer Science | City, University of London
+**Live URL:** https://foresightwallet.onrender.com
+**GitHub:** https://github.com/Tahmidislam10/ForesightWallet
 
-Section 1 env setup process
-    MongoDB setup process 
-    setting up security key
-    Google sign in
-    Gemenai Api key
-    
+---
 
-Section 2 Installation
-Section 3 Folder Structure
-Section 4 Tech stack
-section 5 overview features
-Section 6 Deployed Version
+## Table of Contents
+1. [Environment Setup](#environment-setup)
+2. [Installation](#installation)
+3. [Folder Structure](#folder-structure)
+4. [Tech Stack](#tech-stack)
+5. [Feature Overview](#feature-overview)
+6. [Project Objectives Met](#project-objectives-met)
+7. [Deployed Version](#deployed-version)
 
+---
 
+## Environment Setup
 
+Before running the project, create a `.env` file in the root folder and add the following keys. Follow the setup instructions below for each one.
 
-.env file setup process: 
+---
 
-## Setting Up MongoDB
+### Setting Up MongoDB
 
-Option 1: Local MongoDB
+**Option 1: Local MongoDB**
+
 1. Download and install MongoDB Community Edition from https://www.mongodb.com/try/download/community
 2. Start the MongoDB service:
-   - **Windows:** MongoDB runs as a service automatically after install
-   - **Mac:** `brew services start mongodb-community`
-   - **Linux:** `sudo systemctl start mongod`
+   - Windows: MongoDB runs as a service automatically after install
+   - Mac: `brew services start mongodb-community`
+   - Linux: `sudo systemctl start mongod`
 3. Add this to your `.env` file:
    `MONGO_URI=mongodb://localhost:27017/foresightwallet`
 
+**Option 2: MongoDB Atlas (Cloud — Free)**
 
- Option 2: MongoDB Atlas (Cloud — Free)
 1. Go to https://www.mongodb.com/cloud/atlas and create a free account
-2. Create a new **free cluster** (M0 tier)
-3. When prompted, create a **database user** — save the username and password
-4. Under Network Access, click **Add IP Address** → select **Allow Access from Anywhere**
-5. Go to Database → click **Connect** → choose **Drivers**
-6. Copy the connection string — it looks like:
-   `mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/`
-7. Replace `<username>` and `<password>` with your database user credentials
-8. Add this to your `.env` file as:
-   `MONGO_URI=mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/foresightwallet`
+2. Create a new free cluster (M0 tier)
+3. When prompted, create a database user and save the username and password
+4. Under Network Access, click Add IP Address and select Allow Access from Anywhere
+5. Go to Database, click Connect, and choose Drivers
+6. Copy the connection string which looks like: `mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/`
+7. Replace username and password with your database user credentials
+8. Add this to your `.env` file: `MONGO_URI=mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/foresightwallet`
 
-## Setting Up Secret Key
+---
 
-Add any random string to your `.env` file as:
-`SECRET_KEY=anyrandomstringhere`
+### Setting Up Secret Key
 
-For example: `SECRET_KEY=foresightwallet2026`
+Flask uses this to sign and encrypt session cookies to keep users logged in securely. Add any random string to your `.env` file:
 
+`SECRET_KEY=foresightwallet2026`
 
-## Setting Up Gemini API Key
+---
+
+### Setting Up Gemini API Key
 
 The WalletWise AI chatbot uses Google's Gemini API (gemini-2.5-flash-lite model).
 
 1. Go to https://aistudio.google.com/app/apikey
 2. Sign in with a Google account
-3. Click **Create API Key**
-4. Copy the key and add it to your `.env` file as:
-   `GEMINI_API_KEY=your_key_here`
+3. Click Create API Key
+4. Copy the key and add it to your `.env` file: `GEMINI_API_KEY=your_key_here`
 
-**Note:** The free tier of Google AI Studio is sufficient to run this project.
+Note: The free tier of Google AI Studio is sufficient to run this project.
 
-## Setting Up Google OAuth 
+---
+
+### Setting Up Google OAuth
 
 Google OAuth allows users to sign in with their Google account.
 
 1. Go to https://console.cloud.google.com/ and sign in
-2. Create a new project (or select an existing one)
-3. In the left menu go to **APIs & Services** → **OAuth consent screen**
-   - Select **External** and click Create
+2. Create a new project or select an existing one
+3. In the left menu go to APIs & Services, then OAuth consent screen
+   - Select External and click Create
    - Fill in the app name (e.g. Foresight Wallet) and your email
-   - Click Save and Continue through the rest of the steps
-4. Go to **APIs & Services** → **Credentials**
-5. Click **Create Credentials** → **OAuth 2.0 Client ID**
-6. Set Application type to **Web application**
-7. Under **Authorised redirect URIs** add:
-   `http://localhost:5000/google/callback`
-8. Click Create — you'll get a **Client ID** and **Client Secret**
+   - Click Save and Continue through the remaining steps
+4. Go to APIs & Services, then Credentials
+5. Click Create Credentials and select OAuth 2.0 Client ID
+6. Set Application type to Web application
+7. Under Authorised redirect URIs add: `http://localhost:5000/google/callback`
+8. Click Create — you will receive a Client ID and Client Secret
 9. Add both to your `.env` file:
    `GOOGLE_CLIENT_ID=your_client_id_here`
-   `GOOGLE_CLIENT_SECRET=your_client_secret_here`
+   `GOOGLE_CLIENT_SECRET=your_google_client_secret_here`
 
-
+---
 
 ## Installation
 
-1. **Clone the repository**
-git clone https://github.com/Tahmidislam10/ForesightWallet.git
-cd ForesightWallet
-2. **Create a virtual environment**
-python -m venv venv
-3. **Activate the virtual environment**
+1. Clone the repository:
+   `git clone https://github.com/Tahmidislam10/ForesightWallet.git`
+   `cd ForesightWallet`
+
+2. Create a virtual environment:
+   `python -m venv venv`
+
+3. Activate the virtual environment:
    - Windows: `venv\Scripts\activate`
    - Mac/Linux: `source venv/bin/activate`
-4. **Install dependencies**
-pip install -r requirements.txt
-5. **Create a `.env` file** in the root folder and add all your keys from the setup sections above:
-MONGO_URI=your_mongodb_uri
-SECRET_KEY=your_secret_key
-GEMINI_API_KEY=your_gemini_api_key
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-6. **Run the application**
-python app.py
-The application will run locally at:
-http://localhost:5000
-After this to normallay run application it woild 
+
+4. Install dependencies:
+   `pip install -r requirements.txt`
+
+5. Create a `.env` file in the root folder with all keys from the setup sections above:
+   ```
+   MONGO_URI=your_mongodb_uri
+   SECRET_KEY=your_secret_key
+   GEMINI_API_KEY=your_gemini_api_key
+   GOOGLE_CLIENT_ID=your_google_client_id
+   GOOGLE_CLIENT_SECRET=your_google_client_secret
+   ```
+
+6. Run the application:
+   `python app.py`
+
+7. Open your browser and go to `http://127.0.0.1:5000`
+
+**To run the application again after initial setup:**
+```
 venv\Scripts\activate
 python app.py
-then click on http://127.0.0.1:5000
+```
+Then open `http://127.0.0.1:5000`
+
+---
 
 ## Folder Structure
 
@@ -175,67 +190,97 @@ ForesightWallet/
     └── register.html               # Register page
 ```
 
-
-
+---
 
 ## Tech Stack
 
-| Component | Technology |
-|---|---|
-| Backend | Python 3.10, Flask 3.0.2 |
-| Templating | Jinja2 |
-| Database | MongoDB (PyMongo 4.16.0) |
-| Frontend | HTML, CSS, JavaScript, Bootstrap 5.3.2 |
-| Charts | ApexCharts 3.44.0 |
-| ML Models | scikit-learn 1.8.0, joblib 1.3.2 |
-| AI Chatbot | Google Gemini API (gemini-2.5-flash-lite) |
-| Authentication | Google OAuth 2.0, Flask-Bcrypt |
-| Deployment | Render (gunicorn 21.2.0) |
-| PDF Export | jsPDF, html2canvas |
+Backend: Python 3.10, Flask 3.0.2
+Templating: Jinja2
+Database: MongoDB (PyMongo 4.16.0)
+Frontend: HTML, CSS, JavaScript, Bootstrap 5.3.2
+Charts: ApexCharts 3.44.0
+ML Models: scikit-learn 1.8.0, joblib 1.3.2
+AI Chatbot: Google Gemini API (gemini-2.5-flash-lite)
+Authentication: Google OAuth 2.0, Flask-Bcrypt
+Deployment: Render (gunicorn 21.2.0)
+PDF Export: jsPDF, html2canvas
 
+---
+
+## Feature Overview
+
+Dashboard: KPI cards showing starting balance, end balance, net effect, projected balance, daily burn rate and budget usage for any selected month
+
+Spending Log: Add, edit and delete income and expense transactions by category and date
+
+Budget Tracker: Set monthly spending limits, account balance and income. Tracks progress with a visual meter and alerts when nearing the limit
+
+Spending Trends: Interactive daily and monthly spending charts with period comparison and PDF export
+
+Income Trends: Monthly income charts with year overview and PDF export
+
+Planned Deductions: Track recurring savings, bills and debt payments over time with breakdown charts
+
+Personalised Feedback: Rule-based spending tips generated from your actual transaction categories each month
+
+ML Spending Forecast: Random Forest model predicts whether you will exceed your budget in the next 30 days
+
+Top Category Prediction: Predicts which spending category will be highest next month
+
+Spending Behaviour Clustering: K-Means model classifies your spending behaviour as Saver, Balanced or Leisure-Heavy
+
+Financial Risk Indicator: Colour-coded risk score out of 100 based on spending, income and savings behaviour
+
+WalletWise AI Chatbot: Gemini-powered assistant that answers finance questions and looks up live prices
+
+Dark Mode: Full dark/light mode toggle across all pages
+
+Google OAuth: Sign in with Google in addition to standard email and password registration
+
+PDF Export: Download charts as PDF files from spending trends, income trends, planned deductions and prediction pages
+
+---
 
 ## Project Objectives Met
 
 ### Core Objectives Met from PDD
-| Objective | Status |
-|---|---|
-| Sub-obj 1: Wireframes for key pages | Completed |
-| Sub-obj 2: Web interface with sidebar and navigation | Completed |
-| Sub-obj 3: Flask backend with ML integration and database | Completed |
-| Sub-obj 4: Spending Log with categories and database storage | Completed |
-| Sub-obj 5: Spending Insights with trends and top categories | Completed |
-| Sub-obj 6: ML Prediction trained on Kaggle synthetic data | Completed (upgraded to Random Forest) |
-| Sub-obj 7: Personalised Feedback using rule-based logic | Completed |
-| Sub-obj 8: Dashboard with charts and summary cards | Completed |
-| Sub-obj 9: Budget Tracker with spending limits and alerts | Completed |
-| Sub-obj 10: Deployment on Render | Completed — Live at https://foresightwallet.onrender.com |
+
+Sub-obj 1: Wireframes for key pages — Completed
+Sub-obj 2: Web interface with sidebar and navigation — Completed
+Sub-obj 3: Flask backend with ML integration and database — Completed
+Sub-obj 4: Spending Log with categories and database storage — Completed
+Sub-obj 5: Spending Insights with trends and top categories — Completed
+Sub-obj 6: ML Prediction trained on Kaggle synthetic data — Completed (upgraded to Random Forest)
+Sub-obj 7: Personalised Feedback using rule-based logic — Completed
+Sub-obj 8: Dashboard with charts and summary cards — Completed
+Sub-obj 9: Budget Tracker with spending limits and alerts — Completed
+Sub-obj 10: Deployment on Render — Completed, live at https://foresightwallet.onrender.com
 
 ### Additional Features Met from PDD
-| Objective | Status |
-|---|---|
-| Sub-obj 11: PDF export for charts and summaries | Completed |
-| Sub-obj 12: Rotating motivational quotes on dashboard | Completed |
-| Sub-obj 13: K-Means clustering (Saver, Balanced, Leisure-Heavy) | Completed |
-| Sub-obj 14: Financial Risk Indicator with colour-coded meter | Completed |
-| Sub-obj 15: Dark/Light mode toggle | Completed |
+
+Sub-obj 11: PDF export for charts and summaries — Completed
+Sub-obj 12: Rotating motivational quotes on dashboard — Completed
+Sub-obj 13: K-Means clustering (Saver, Balanced, Leisure-Heavy) — Completed
+Sub-obj 14: Financial Risk Indicator with colour-coded meter — Completed
+Sub-obj 15: Dark/Light mode toggle — Completed
 
 ### Bonus Features Beyond PDD
-| Feature | Description |
-|---|---|
-| Top Category Prediction | Predicts which spending category will be highest next month |
-| WalletWise AI Chatbot | Gemini-powered assistant for finance questions and live price lookups |
-| Google OAuth | Sign in with Google in addition to email and password |
-| Planned Deductions | Track recurring savings, bills and debt payments with history charts |
-| Income Trends | Dedicated income tracking page with year overview charts |
-| Carry Forward Balance | Automatically carry previous month end balance into next month |
-| Mobile Responsive Design | Full mobile responsiveness with slide-in sidebar drawer |
 
+Top Category Prediction: Predicts which spending category will be highest next month
+WalletWise AI Chatbot: Gemini-powered assistant for finance questions and live price lookups
+Google OAuth: Sign in with Google in addition to email and password
+Planned Deductions: Track recurring savings, bills and debt payments with history charts
+Income Trends: Dedicated income tracking page with year overview charts
+Carry Forward Balance: Automatically carry previous month end balance into next month
+Mobile Responsive Design: Full mobile responsiveness with slide-in sidebar drawer
+
+---
 
 ## Deployed Version
 
 The application is live and accessible at:
-**https://foresightwallet.onrender.com**
+https://foresightwallet.onrender.com
 
 Markers can register a new account and test the application directly via the URL above without any local setup.
 
-> **Note:** The app is hosted on Render's free tier and may take 30–60 seconds to wake up on first load if it has been inactive.
+Note: The app is hosted on Render's free tier and may take 30–60 seconds to wake up on first load if it has been inactive.
