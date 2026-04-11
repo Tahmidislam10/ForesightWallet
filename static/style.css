@@ -1256,3 +1256,42 @@ body.dark-mode #wwInput:focus {
 body.dark-mode #sidebarOverlay {
     background: rgba(0, 0, 0, 0.65);
 }
+
+@media (max-width: 768px) {
+
+    /* Spending trends / prediction charts - fix x-axis label overlap */
+    #spendingChart .apexcharts-xaxis-label,
+    #forecastChart .apexcharts-xaxis-label {
+        font-size: 9px !important;
+    }
+
+    #spendingChart,
+    #forecastChart {
+        overflow-x: auto;
+    }
+
+    /* WalletWise chat widget - fit within mobile screen */
+    #wwWidget {
+        width: calc(100vw - 32px);
+        right: 16px;
+        left: 16px;
+        bottom: 90px;
+    }
+
+    /* Planned deductions - stack title and buttons vertically */
+    /* Planned deductions - stack title and buttons vertically */
+    #deductionsChart ~ div,
+    #deductions6mBtn,
+    #deductions12mBtn,
+    #deductionsYearBtn {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #deductions6mBtn,
+    #deductions12mBtn {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+
+}
