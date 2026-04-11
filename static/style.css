@@ -1261,6 +1261,24 @@ body.dark-mode #sidebarOverlay {
 
 @media (max-width: 768px) {
 
+    /* Spending log - filter buttons wrap on mobile */
+    .spending-log-page .d-flex.gap-2.align-items-center {
+        flex-wrap: wrap;
+    }
+
+    /* Spending log - table horizontal scroll */
+    .spending-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Spending log - compact date column */
+    .spending-table td:first-child,
+    .spending-table th:first-child {
+        white-space: nowrap;
+        font-size: 12px;
+    }
+
     /* Spending trends / prediction charts - fix x-axis label overlap */
     #spendingChart .apexcharts-xaxis-label,
     #forecastChart .apexcharts-xaxis-label {
