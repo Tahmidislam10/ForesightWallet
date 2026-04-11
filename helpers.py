@@ -57,27 +57,6 @@ def get_prev_month_template(user_id, year, month, field, default):
     return default
 
 
-def get_planned_deductions_history(user_id, months):
-    result = []
-    for year, month in months:
-        budget_doc = budget_collection.find_one({
-            "user_id": user_id,
-            "year": year,
-            "month": month
-        }) or {}
-
-        savings = normalize_section(budget_doc.get("savings", {}))
-        bills = normalize_section(budget_doc.get("bills", {}))
-        debts = normalize_section(budget_doc.get("debts", {}))
-
-        result.append({
-            "label": f"{calendar.month_abbr[month]} {str(year)[2:]}",
-            "savings": round(sum(savings.values()), 2),
-            "bills": round(sum(bills.values()), 2),
-            "debts": round(sum(debts.values()), 2),
-        })
-    return result
-
 def build_budget_doc_lookup(user_id, months):
     unique_months = sorted(set(months))
     if not unique_months:
@@ -111,7 +90,6 @@ def get_planned_deductions_history_from_lookup(months, budget_docs):
         })
     return result
 
-def get_deductions_summary(user_id, months):
     """
     Returns aggregated totals for each individual savings item,
     plus total bills and total debts across the given months.
