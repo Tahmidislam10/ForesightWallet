@@ -3,7 +3,7 @@ Project    : Foresight Wallet
 Developer  : Tahmid Islam
 Course     : BSc Computer Science, City University of London
 Live URL   : https://foresightwallet.onrender.com
-GitHub     : https://github.com/Tahmidislam10/ForesightWallet
+GitHub     : https://github.com/Tahmidislam10/ForesightWallet (Private Repository. Access will be granted to markers upon request)
 
 
 TABLE OF CONTENTS
@@ -97,9 +97,8 @@ Google OAuth allows users to sign in with their Google account.
 
 2. INSTALLATION
 
-  1. Clone the repository:
-     git clone https://github.com/Tahmidislam10/ForesightWallet.git
-     cd ForesightWallet
+  1. Extract the submitted ZIP file and navigate into the folder:
+     cd ForesightWallet-main
 
   2. Create a virtual environment:
      python -m venv venv
