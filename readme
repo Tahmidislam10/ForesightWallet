@@ -97,14 +97,18 @@ Google OAuth allows users to sign in with their Google account.
 
 2. INSTALLATION
 
-  1. Extract the submitted ZIP file and navigate into the folder:
-     cd ForesightWallet-main
+  1. Extract the submitted ZIP file ForesightWallet_Tahmid_Islam_220005783.zip 
+     Open the extracted ForesightWallet-main
+     folder in VS Code, then open a terminal inside VS Code using:
+     Terminal menu → New Terminal
 
   2. Create a virtual environment:
-     python -m venv venv
+       Windows  : py -m venv venv
+       Mac/Linux: python3 -m venv venv
 
   3. Activate the virtual environment:
-       Windows  : venv\Scripts\activate
+       Windows  : First run: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+                  Then run:  venv\Scripts\Activate.ps1
        Mac/Linux: source venv/bin/activate
 
   4. Install dependencies:
@@ -119,7 +123,7 @@ Google OAuth allows users to sign in with their Google account.
      GOOGLE_CLIENT_SECRET=your_google_client_secret
 
   6. Run the application:
-     python app.py
+     python app.py or py app.py
 
   7. Open your browser and go to:
      http://127.0.0.1:5000
@@ -127,7 +131,7 @@ Google OAuth allows users to sign in with their Google account.
 To run the application again after initial setup:
 
      venv\Scripts\activate
-     python app.py
+     python app.py or py app.py
 
 Then open http://127.0.0.1:5000
 
