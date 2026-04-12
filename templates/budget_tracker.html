@@ -303,7 +303,7 @@
 
 <script src="{{ url_for('static', filename='js/budget_tracker.js') }}"></script>
 <script>
-    // Restrict income date picker to selected month only
+    // income date picker to selected month only
     const incomeDatePicker = document.getElementById("incomeDatePicker");
     if (incomeDatePicker) {
         const selectedYear = {{ selected_year }};

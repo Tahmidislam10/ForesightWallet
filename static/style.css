@@ -258,11 +258,9 @@ body {
 .divider:after { right: 0; }
 
 
-/* Transaction table scroll area */
-/* Make only transaction table scroll */
-/* Fixed height scrollable transaction table */
+/* Scrollable transaction table */
 .table-container {
-    max-height: 420px;   /* adjust height here */
+    max-height: 420px;  
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -1127,9 +1125,6 @@ body.dark-mode #wwInput:focus {
 @media (max-width: 480px) {
     .fw-grid { grid-template-columns: 1fr; }
 }
-@media (max-width: 480px) {
-    .fw-grid { grid-template-columns: 1fr; }
-}
 
 /* AUTH PAGES - LOGIN & REGISTER (from login.html & register.html)  */
 .auth-body {
@@ -1298,7 +1293,6 @@ body.dark-mode #sidebarOverlay {
         bottom: 90px;
     }
 
-    /* Planned deductions - stack title and buttons vertically */
     /* Planned deductions - stack title and buttons vertically */
     #deductionsChart ~ div,
     #deductions6mBtn,

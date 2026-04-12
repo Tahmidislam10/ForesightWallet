@@ -44,7 +44,7 @@ df["category"] = df["category"].str.strip().str.lower().map(
     lambda x: category_map.get(x, x.title()) if isinstance(x, str) else "Other"
 )
 
-# Build user-level features ──
+# Build user-level features
 # For clustering we aggregate across ALL months per user
 # to get their overall spending profile
 records = []

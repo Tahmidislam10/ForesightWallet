@@ -133,6 +133,8 @@ To run the application again after initial setup:
 Then open http://127.0.0.1:5000
 
 
+
+
 3. FOLDER STRUCTURE
 
 ForesightWallet/
@@ -142,6 +144,9 @@ ForesightWallet/
 ├── Procfile                        # gunicorn app:app (Render deployment)
 ├── runtime.txt                     # python-3.10.13
 ├── requirements.txt                # Python dependencies
+├── .gitignore                      # Files excluded from version control
+├── .gitattributes                  # Git line ending and diff settings
+├── budgetwise_finance_dataset.csv  # Synthetic dataset used to train ML models
 ├── routes/
 │   ├── auth.py                     # Register, login, Google OAuth, logout
 │   ├── budget.py                   # Budget tracker + /api/prev-month-balance
@@ -163,6 +168,9 @@ ForesightWallet/
 │   ├── kmeans_scaler.pkl           # Scaler for K-Means
 │   ├── kmeans_feature_cols.pkl     # Feature columns for K-Means
 │   └── kmeans_cluster_labels.pkl   # Cluster label mappings
+├── ml_training/
+│   ├── train_spending_forecast_model.py  # Trained the Random Forest model on the synthetic dataset and saved the .pkl files to ml_models
+│   └── train_kmeans_model.py             # Trained the K-Means clustering model and saved the .pkl files to ml_models
 ├── static/
 │   ├── LogoN.png                   # App logo
 │   ├── style.css                   # All styles consolidated
@@ -191,6 +199,8 @@ ForesightWallet/
     ├── landing.html                # Landing page
     ├── login.html                  # Login page
     └── register.html               # Register page
+
+
 
 
 4. TECH STACK
