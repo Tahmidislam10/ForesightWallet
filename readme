@@ -133,7 +133,6 @@ Then open http://127.0.0.1:5000
 
 
 
-
 3. FOLDER STRUCTURE
 
 ForesightWallet/
@@ -198,7 +197,6 @@ ForesightWallet/
     ├── landing.html                # Landing page
     ├── login.html                  # Login page
     └── register.html               # Register page
-
 
 
 
